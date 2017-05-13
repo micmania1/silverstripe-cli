@@ -1,0 +1,17 @@
+{
+    "name": "micmania1/silverstripe-cli",
+    "authors": [
+        {
+            "name": "micmania1",
+            "email": "mstrong@silverstripe.org"
+        }
+    ],
+	"autoload": {
+		"psr-4": {"micmania1\\SilverStripeCli\\": "src"}
+	},
+    "require": {
+        "symfony/console": "^3.2",
+        "symfony/process": "^3.2",
+        "composer/composer": "^1.4"
+    }
+}

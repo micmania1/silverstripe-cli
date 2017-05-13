@@ -1,0 +1,29 @@
+#!/usr/bin/env php
+<?php
+
+require __DIR__ . '/../vendor/autoload.php';
+
+use Symfony\Component\Console\Application;
+
+define('ROOT_DIR', dirname(__DIR__));
+define('COMPOSER_BIN', ROOT_DIR . '/vendor/bin/composer');
+
+$application = new Application();
+
+// Register all of our commands
+$commands = glob(__DIR__ . '/../src/Commands/*.php');
+foreach($commands as $command) {
+	$pos = strrpos($command, DIRECTORY_SEPARATOR);
+	if(is_int($pos)) {
+		$pos++;
+	} else {
+		$pos = 0;
+	}
+
+	$class = '\\micmania1\\SilverStripeCli\\Commands\\' . substr($command, $pos, -4);
+	if(class_exists($class)) {
+		$application->add(new $class);
+	}
+}
+
+$application->run();
