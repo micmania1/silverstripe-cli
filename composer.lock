@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "c563aea34af31501eb88f3718ad5fd62",
+    "content-hash": "7d0f8270552b64f1072aaeb2c72aaf81",
     "packages": [
         {
             "name": "composer/ca-bundle",
@@ -264,6 +264,48 @@
                 "validator"
             ],
             "time": "2017-04-03T19:08:52+00:00"
+        },
+        {
+            "name": "czproject/git-php",
+            "version": "v3.9.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/czproject/git-php.git",
+                "reference": "9cf9a6d356f4d4d3dd68cd83cdb48640242d1f0f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/czproject/git-php/zipball/9cf9a6d356f4d4d3dd68cd83cdb48640242d1f0f",
+                "reference": "9cf9a6d356f4d4d3dd68cd83cdb48640242d1f0f",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.4.0"
+            },
+            "require-dev": {
+                "nette/tester": "~1.1.0"
+            },
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "src/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Jan Pecha",
+                    "email": "janpecha@email.cz"
+                }
+            ],
+            "description": "Library for work with Git repository in PHP.",
+            "keywords": [
+                "git"
+            ],
+            "time": "2017-03-13T11:27:42+00:00"
         },
         {
             "name": "justinrainbow/json-schema",

@@ -12,6 +12,8 @@
     "require": {
         "symfony/console": "^3.2",
         "symfony/process": "^3.2",
-        "composer/composer": "^1.4"
+        "composer/composer": "^1.4",
+        "symfony/filesystem": "^3.2",
+        "czproject/git-php": "^3.9"
     }
 }

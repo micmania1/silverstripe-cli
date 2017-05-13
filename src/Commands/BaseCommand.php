@@ -9,7 +9,9 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class BaseCommand extends Command
 {
-	const COLUMN_LENGTH = 50;
+	const COLUMN_LENGTH = 80;
+
+	const CLI_FILE = '.silverstripe-cli.yaml';
 
 	protected function configure()
 	{
@@ -24,55 +26,38 @@ class BaseCommand extends Command
 		$output->writeln('<comment>' . str_pad('', self::COLUMN_LENGTH, '-') . '</comment>');
 	}
 
-	protected function clearLine($output) 
+	/**
+	 * @param string $directory
+	 *
+	 * @return boolean
+	 */
+	protected function isCliProject($directory)
 	{
-		// Move the cursor to the beginning of the line
-		$output->write("\x0D");
-
-		// Erase the line
-		$output->write("\x1B[2K");
+		return $this->hasCliFile($directory);
 	}
 
-	protected function spin($message, $process, $output) 
+	/**
+	 * @return string
+	 */
+	protected function getCliFile()
 	{
-		$state = 0;
-		while($process->isRunning()) {
-			$state++;
-
-			$this->clearLine($output);
-
-			// Write the message
-			$output->write(str_pad($message, self::COLUMN_LENGTH - 1));
-
-			// Figure out our spinner state
-			switch($state) {
-				case 1:
-					$output->write('|');
-					break;
-				case 2:
-					$output->write('/');
-					break;
-				case 3:
-					$output->write('-');
-					break;
-				case 4:
-					$output->write('\\');
-					$state = 0;
-					break;
-			}
-
-			usleep(80000);
-		}
-
-		$this->clearLine($output);
-
-
-		if($process->isSuccessful()) {
-			$output->write(str_pad($message, self::COLUMN_LENGTH - 2));
-			$output->writeln('<info>OK</info>');
-		} else {
-			$output->write(str_pad($message, self::COLUMN_LENGTH - 4));
-			$output->writeln('<error>FAIL</error>');
-		}
+		return static::CLI_FILE;
 	}
+
+	/**
+	 * @param string $directory
+	 *
+	 * @return array
+	 */
+	protected function hasCliFile($directory)
+	{
+		// If the silverstripe cli config file doesn't exist, then its not considered
+		// a silverstripe project
+		$cliFile = rtrim($directory, DIRECTORY_SEPARATOR)
+			. DIRECTORY_SEPARATOR
+			. $this->getCliFile();
+
+		return file_exists($cliFile);
+	}
+
 }
