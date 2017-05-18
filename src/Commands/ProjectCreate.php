@@ -9,6 +9,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Question\ConfirmationQuestion;
 
 use Symfony\Component\Process\Process;
 
@@ -36,6 +37,11 @@ class ProjectCreate extends BaseCommand
 	 */
 	protected $gitInit = true;
 
+	/**
+	 * The SilverStripe version to install. We only support 4+.
+	 */
+	protected $version = '@dev';
+
 	protected function configure()
 	{
 		// Set name and descriptions
@@ -45,6 +51,7 @@ class ProjectCreate extends BaseCommand
 
 		// Add command arguments
 		$this->addArgument('directory', InputArgument::REQUIRED, 'The directory of the project');
+		$this->addArgument('version', InputArgument::OPTIONAL, 'SilverStripe version (compatible with composer)');
 
 		// Add command options
 		$this->addOption('exclude-git', null, InputOption::VALUE_NONE, 'Don\'t initialise a git repo');
@@ -63,6 +70,11 @@ class ProjectCreate extends BaseCommand
 		$this->directory = $input->getArgument('directory');
 		$this->force = $input->getOption('force');
 		$this->gitInit = !$input->getOption('exclude-git');
+
+		$version = $input->getOption('version');
+		if($version) {
+			$this->setSilverStripeVersion($version);
+		}
 	}
 
 	/**
@@ -71,10 +83,13 @@ class ProjectCreate extends BaseCommand
 	protected function execute(InputInterface $input, OutputInterface $output)
 	{
 		if($this->isForced()) {
-			$this->removeExistingCliProject($output);
+			if(!$this->removeExistingCliProject($input, $output)) {
+				return;
+			}
 		}
 
 		$this->runComposer($output);
+
 		$this->copyFixtureFileToProject($output, $this->getCliFile());
 		$this->copyFixtureFileToProject($output, '.env');
 		$this->copyFixtureFileToProject($output, 'Dockerfile');
@@ -85,7 +100,9 @@ class ProjectCreate extends BaseCommand
 			$this->initGitRepo($output);
 		}
 
-		$output->writeln('<info>Project created</info>');
+		$output->writeln('');
+		$output->writeln(" <info>Project created</info> \xF0\x9F\x8D\xBA");
+		$output->writeln('');
 	}
 
 	/**
@@ -103,6 +120,16 @@ class ProjectCreate extends BaseCommand
 		}
 
 		return $filesystem->makePathRelative($directory, getcwd());
+	}
+
+	protected function getSilverStripeVersion()
+	{
+		return $this->version;
+	}
+
+	protected function setSilverStripeVersion($version)
+	{
+		$this->version = $version;
 	}
 
 	protected function getWebDirectory()
@@ -143,11 +170,24 @@ class ProjectCreate extends BaseCommand
 	 *
 	 * @param OutputInterface
 	 */
-	protected function removeExistingCliProject($output)
+	protected function removeExistingCliProject(InputInterface $input, OutputInterface $output)
 	{
 		$dir = $this->getDirectory();
 		if(!$this->isCliProject($dir)) {
-			return;
+			$helper = $this->getHelper('question');
+
+			$output->writeln('The directory isn\'t a SilverStripe Cli directory but already exists.');
+			$question = new ConfirmationQuestion(
+				'Remove the directory [<comment>y/N</comment>]: ', 
+				false
+			);
+
+			if(!$helper->ask($input, $output, $question)) {
+				$output->writeln('<error>Aborted</error>');
+				return false;
+			} else {
+				$output->writeln('');
+			}
 		}
 
 		$filesystem = new Filesystem();
@@ -164,6 +204,8 @@ class ProjectCreate extends BaseCommand
 		$message = sprintf('Removing existing project at %s', $dir);
 		$spinner = new Spinner($output, $message);
 		$spinner->run($status, $type);
+
+		return true;
 	}
 
 	/**
@@ -174,15 +216,16 @@ class ProjectCreate extends BaseCommand
 	protected function runComposer($output)
 	{
 		$command = sprintf(
-			'%s create-project silverstripe/installer %s --prefer-dist',
+			'%s create-project silverstripe/installer %s %s --prefer-dist',
 			COMPOSER_BIN,
-			$this->getWebDirectory()
+			$this->getWebDirectory(),
+			$this->getSilverStripeVersion()
 		);
 
 		$process = new Process($command);
 		$spinner = new ProcessSpinner(
 			$output,
-			'Creating a new project from silverstripe/installer',
+			sprintf('Downloading SilverStripe <info>%s</info>', $this->getSilverStripeVersion()),
 			$process
 		);
 		$spinner->run();

@@ -19,7 +19,7 @@ class Spinner
 
 	protected $state = 0;
 
-	public function __construct($output, $message, $time = 2)
+	public function __construct($output, $message, $time = 1)
 	{
 		$this->output = $output;
 		$this->message = $message;
@@ -84,7 +84,13 @@ class Spinner
 	protected function updateStatus($status = null, $type = null)
 	{
 		$message = ' ' . trim($this->message);
-		$message = str_pad($message, BaseCommand::COLUMN_LENGTH, '.');
+
+		// Because we can have tags in our message which won't be shown, we need
+		// to account for these in the padding by stripping them to calculate
+		// how much we actually need to pag.
+		$tagLength = strlen($message) - strlen(strip_tags($message));
+
+		$message = str_pad($message, BaseCommand::COLUMN_LENGTH + $tagLength, '.');
 
 		if(!empty($status)) {
 			$length = strlen($status);
