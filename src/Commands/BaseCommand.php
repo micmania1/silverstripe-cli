@@ -21,9 +21,10 @@ class BaseCommand extends Command
 
 	protected function initialize(InputInterface $input, OutputInterface $output)
 	{
-		$output->writeln('<comment>' . str_pad('', self::COLUMN_LENGTH, '-') . '</comment>');
-		$output->writeln('<comment> SilverStripe CLI</comment>');
-		$output->writeln('<comment>' . str_pad('', self::COLUMN_LENGTH, '-') . '</comment>');
+		$formatter = $this->getHelper('formatter');
+		$logo = file_get_contents(CLI_ASSETS . '/ascii-logo');
+		$block = $formatter->formatBlock($logo, 'info');
+		$output->writeln($block);
 	}
 
 	/**

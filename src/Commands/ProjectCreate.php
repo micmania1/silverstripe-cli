@@ -77,6 +77,9 @@ class ProjectCreate extends BaseCommand
 		$this->runComposer($output);
 		$this->copyFixtureFileToProject($output, $this->getCliFile());
 		$this->copyFixtureFileToProject($output, '.env');
+		$this->copyFixtureFileToProject($output, 'Dockerfile');
+		$this->copyFixtureFileToProject($output, 'mysite.apache.conf', 'conf/mysite.apache.conf');
+		$this->copyFixtureFileToProject($output, 'docker-startup', 'conf/docker-startup');
 
 		if($this->gitInit) {
 			$this->initGitRepo($output);
@@ -191,10 +194,19 @@ class ProjectCreate extends BaseCommand
 	 * @param OutputInterface $output
 	 * @param string $file
 	 */
-	protected function copyFixtureFileToProject(OutputInterface $output, $file)
+	protected function copyFixtureFileToProject(OutputInterface $output, $file, $target = null)
 	{
+		if(!$target) {
+			$target = $file;
+		}
+
+		$target = $this->getProjectFile($target);
+		if(!is_dir($dir = dirname($target))) {
+			mkdir($dir, 0775, true);
+		}
+
 		$source = fopen($this->getFixtureFile($file), 'r');
-		$dest = fopen($this->getProjectFile($file), 'w');
+		$dest = fopen($target, 'w');
 
 		$result = stream_copy_to_stream($source, $dest);
 
