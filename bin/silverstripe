@@ -4,6 +4,7 @@
 require __DIR__ . '/../vendor/autoload.php';
 
 use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Command\Command;
 
 define('ROOT_DIR', dirname(__DIR__));
 define('COMPOSER_BIN', ROOT_DIR . '/vendor/bin/composer');
@@ -11,6 +12,8 @@ define('FIXTURES_DIR', ROOT_DIR . '/fixtures');
 define('CLI_ASSETS', ROOT_DIR . '/cli-assets');
 
 $application = new Application();
+$application->setName('SilverStripe Cli');
+$application->setVersion('0.1-experimental');
 
 // Register all of our commands
 $commands = glob(__DIR__ . '/../src/Commands/*.php');
@@ -22,9 +25,16 @@ foreach($commands as $command) {
 		$pos = 0;
 	}
 
-	$class = '\\micmania1\\SilverStripeCli\\Commands\\' . substr($command, $pos, -4);
-	if(class_exists($class)) {
-		$application->add(new $class);
+	$namespace = '\\micmania1\\SilverStripeCli\\Commands\\';
+	$class = $namespace . substr($command, $pos, -4);
+	if(class_exists($class) && is_a($class, Command::class, true)) {
+
+		$cmd = new $class;
+		$application->add($cmd);
+
+		if($cmd->getName() == 'silverstripe') {
+			$application->setDefaultCommand($cmd->getName());
+		}
 	}
 }
 

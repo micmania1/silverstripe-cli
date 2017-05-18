@@ -9,6 +9,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class BaseCommand extends Command
 {
+	use CommandHeader;
+
 	const COLUMN_LENGTH = 80;
 
 	const CLI_FILE = '.silverstripe-cli.yaml';
@@ -21,10 +23,7 @@ class BaseCommand extends Command
 
 	protected function initialize(InputInterface $input, OutputInterface $output)
 	{
-		$formatter = $this->getHelper('formatter');
-		$logo = file_get_contents(CLI_ASSETS . '/ascii-logo');
-		$block = $formatter->formatBlock($logo, 'info');
-		$output->writeln($block);
+		$this->displayHeader($output);
 	}
 
 	/**
