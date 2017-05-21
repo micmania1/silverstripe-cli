@@ -1,6 +1,14 @@
 #!/bin/bash
 
+groupadd -g $SSCLI_GID $SSCLI_GROUPNAME
+useradd -u $SSCLI_UID -g $SSCLI_GROUPNAME $SSCLI_USERNAME
+
+sed -i "s/www-data/$SSCLI_USERNAME/g" /etc/apache2/envvars
+
 service apache2 start
 service mysql start
+
+WEB_DIR="/var/www/mysite/www"
+su -u $SSCLI_USERNAME php $WEB_DIR/framework/cli-script.php dev/build flush=1
 
 bash

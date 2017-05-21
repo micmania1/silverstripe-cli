@@ -4,6 +4,7 @@ namespace micmania1\SilverStripeCli\Commands;
 
 use micmania1\SilverStripeCli\Helpers\ProcessSpinner;
 use micmania1\SilverStripeCli\Helpers\Spinner;
+use micmania1\SilverStripeCli\Model\Project;
 
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -20,13 +21,6 @@ use Cz\Git;
 
 class ProjectCreate extends BaseCommand
 {
-	const WEB_DIRECTORY = 'www';
-
-	/**
-	 * @var string
-	 */
-	protected $directory;
-
 	/**
 	 * @var boolean
 	 */
@@ -42,20 +36,46 @@ class ProjectCreate extends BaseCommand
 	 */
 	protected $version = '@dev';
 
+	/**
+	 * @var Project
+	 */
+	protected $project;
+
 	protected function configure()
 	{
 		// Set name and descriptions
 		$this->setName('new')
 			->setDescription('Create a new SilverStripe project')
-			->setHelp('This will create a skeleton SilverStripe app and initialise its git repo');
+			->setHelp(
+				'This will create a skeleton SilverStripe app and initialise '
+				. 'its git repo'
+			);
 
 		// Add command arguments
-		$this->addArgument('directory', InputArgument::REQUIRED, 'The directory of the project');
-		$this->addArgument('version', InputArgument::OPTIONAL, 'SilverStripe version (compatible with composer)');
+		$this->addArgument(
+			'directory', 
+			InputArgument::REQUIRED, 
+			'The directory of the project'
+		);
+		$this->addArgument(
+			'version', 
+			InputArgument::OPTIONAL, 
+			'SilverStripe version (compatible with composer)'
+		);
 
 		// Add command options
-		$this->addOption('exclude-git', null, InputOption::VALUE_NONE, 'Don\'t initialise a git repo');
-		$this->addOption('force', 'f', InputOption::VALUE_NONE, 'Remove existing directory');
+		$this->addOption(
+			'exclude-git', 
+			null, 
+			InputOption::VALUE_NONE, 
+			'Don\'t initialise a git repo'
+		);
+		$this->addOption(
+			'force', 
+			'f', 
+			InputOption::VALUE_NONE, 
+			'Remove existing directory'
+		);
 	}
 
 	/**
@@ -67,7 +87,6 @@ class ProjectCreate extends BaseCommand
 	{
 		parent::initialize($input, $output);
 
-		$this->directory = $input->getArgument('directory');
 		$this->force = $input->getOption('force');
 		$this->gitInit = !$input->getOption('exclude-git');
 
@@ -75,6 +94,16 @@ class ProjectCreate extends BaseCommand
 		if($version) {
 			$this->setSilverStripeVersion($version);
 		}
+
+		$filesystem = new Filesystem();
+
+		$directory = $input->getArgument('directory');
+		if(!$filesystem->isAbsolutePath($directory)) {
+			$directory = getcwd() . DIRECTORY_SEPARATOR . $directory;
+		}
+
+		$directory = $filesystem->makePathRelative($directory, getcwd());
+		$this->project = new Project($directory);
 	}
 
 	/**
@@ -83,18 +112,18 @@ class ProjectCreate extends BaseCommand
 	protected function execute(InputInterface $input, OutputInterface $output)
 	{
 		if($this->isForced()) {
-			if(!$this->removeExistingCliProject($input, $output)) {
+			if(!$this->removeExistingProject($input, $output)) {
 				return;
 			}
 		}
 
 		$this->runComposer($output);
 
-		$this->copyFixtureFileToProject($output, $this->getCliFile());
+		$cliFile = basename($this->getProject()->getCliFile());
+		$this->copyFixtureFileToProject($output, $cliFile);
+
 		$this->copyFixtureFileToProject($output, '.env');
-		$this->copyFixtureFileToProject($output, 'Dockerfile');
-		$this->copyFixtureFileToProject($output, 'mysite.apache.conf', 'conf/mysite.apache.conf');
-		$this->copyFixtureFileToProject($output, 'docker-startup', 'conf/docker-startup');
+		$this->removeUnnecessaryProjectFiles($output);
 
 		if($this->gitInit) {
 			$this->initGitRepo($output);
@@ -106,35 +135,27 @@ class ProjectCreate extends BaseCommand
 	}
 
 	/**
-	 * Returns the relative project directory
-	 *
-	 * @return string
+	 * @return Project
 	 */
-	protected function getDirectory()
+	protected function getProject()
 	{
-		$filesystem = new Filesystem();
-
-		$directory = $this->directory;
-		if(!$filesystem->isAbsolutePath($directory)) {
-			$directory = getcwd() . DIRECTORY_SEPARATOR . $directory;
-		}
-
-		return $filesystem->makePathRelative($directory, getcwd());
+		return $this->project;
 	}
 
+	/**
+	 * @return string
+	 */
 	protected function getSilverStripeVersion()
 	{
 		return $this->version;
 	}
 
+	/**
+	 * @param string
+	 */
 	protected function setSilverStripeVersion($version)
 	{
 		$this->version = $version;
-	}
-
-	protected function getWebDirectory()
-	{
-		return $this->getDirectory() . self::WEB_DIRECTORY;
 	}
 
 	/**
@@ -152,17 +173,9 @@ class ProjectCreate extends BaseCommand
 	 */
 	protected function getFixtureFile($file)
 	{
-		return FIXTURES_DIR . DIRECTORY_SEPARATOR . $file;
-	}
-
-	/**
-	 * @param string $file
-	 *
-	 * @return string
-	 */
-	protected function getProjectFile($file)
-	{
-		return $this->getDirectory() . DIRECTORY_SEPARATOR . $file;
+		return rtrim(FIXTURES_DIR, DIRECTORY_SEPARATOR)
+			. DIRECTORY_SEPARATOR 
+			. $file;
 	}
 
 	/**
@@ -170,15 +183,19 @@ class ProjectCreate extends BaseCommand
 	 *
 	 * @param OutputInterface
 	 */
-	protected function removeExistingCliProject(InputInterface $input, OutputInterface $output)
-	{
-		$dir = $this->getDirectory();
-		if(!$this->isCliProject($dir)) {
+	protected function removeExistingProject(
+		InputInterface $input, 
+		OutputInterface $output
+	) {
+		$project = $this->getProject();
+		if(!$project->isCli()) {
 			$helper = $this->getHelper('question');
 
-			$output->writeln('The directory isn\'t a SilverStripe Cli directory but already exists.');
+			$output->writeln(
+				'The directory isn\'t a SilverStripe Cli project.'
+			);
 			$question = new ConfirmationQuestion(
-				'Remove the directory [<comment>y/N</comment>]: ', 
+				'Do you want to remove it [<comment>y/N</comment>]: ', 
 				false
 			);
 
@@ -190,20 +207,26 @@ class ProjectCreate extends BaseCommand
 			}
 		}
 
-		$filesystem = new Filesystem();
+		$message = sprintf(
+			'Removing existing project at %s', 
+			$project->getRootDirectory()
+		);
+		$spinner = new Spinner($output, $message);
 
+		$filesystem = new Filesystem();
 		try {
-			$filesystem->remove($dir);
+			$filesystem->remove($project->getRootDirectory());
 			$status = 'OK';
 			$type = 'info';
+			$spinner->run($status, $type);
 		} catch (IOExceptionInterface $e) {
 			$status = 'FAIL';
 			$type = 'error';
+			$spinner->run($status, $type);
+
+			throw $e;
 		}
 
-		$message = sprintf('Removing existing project at %s', $dir);
-		$spinner = new Spinner($output, $message);
-		$spinner->run($status, $type);
 
 		return true;
 	}
@@ -213,19 +236,22 @@ class ProjectCreate extends BaseCommand
 	 *
 	 * @param OutputInterface
 	 */
-	protected function runComposer($output)
+	protected function runComposer(OutputInterface $output)
 	{
 		$command = sprintf(
 			'%s create-project silverstripe/installer %s %s --prefer-dist',
 			COMPOSER_BIN,
-			$this->getWebDirectory(),
+			$this->getProject()->getWebDirectory(),
 			$this->getSilverStripeVersion()
 		);
 
 		$process = new Process($command);
 		$spinner = new ProcessSpinner(
 			$output,
-			sprintf('Downloading SilverStripe <info>%s</info>', $this->getSilverStripeVersion()),
+			sprintf(
+				'Downloading SilverStripe <info>%s</info>', 
+				$this->getSilverStripeVersion()
+			),
 			$process
 		);
 		$spinner->run();
@@ -237,13 +263,16 @@ class ProjectCreate extends BaseCommand
 	 * @param OutputInterface $output
 	 * @param string $file
 	 */
-	protected function copyFixtureFileToProject(OutputInterface $output, $file, $target = null)
-	{
+	protected function copyFixtureFileToProject(
+		OutputInterface $output, 
+		$file, 
+		$target = null
+	) {
 		if(!$target) {
 			$target = $file;
 		}
 
-		$target = $this->getProjectFile($target);
+		$target = $this->getProject()->getFile($target);
 		if(!is_dir($dir = dirname($target))) {
 			mkdir($dir, 0775, true);
 		}
@@ -253,24 +282,38 @@ class ProjectCreate extends BaseCommand
 
 		$result = stream_copy_to_stream($source, $dest);
 
-		if($result !== FALSE) {
-			$status = 'OK';
-			$type = 'info';
-		} else {
-			$status = 'FAIL';
-			$type = 'error';
-		}
-
 		$spinner = new Spinner($output, sprintf('Creating %s', $file));
-		$spinner->run($status, $type);
+		if($result !== FALSE) {
+			$spinner->run('OK', 'info');
+		} else {
+			$spinner->run('FAIL', 'error');
+		}
 
 		if($result === FALSE) {
 			throw new Exception(sprintf(
 				'Unable to copy from %s to %s',
 				$this->getFixtureFile($file),
-				$this->getProjectFile($file)
+				$this->getProject()->getFile($file)
 			));
 		}
+	}
+
+	protected function removeUnnecessaryProjectFiles(OutputInterface $output)
+	{
+		$spinner = new Spinner($output, 'Removing unnecessary project files');
+		try {
+			$project = $this->getProject();
+			$project->removeFile('www/install.php');
+			$project->removeFile('www/install-frameworkmissing.html');
+
+			$spinner->run('OK', 'info');
+		} catch (IOExceptionInterface $e) {
+			$spinner->run('FAIL', 'error');
+
+			throw $e;
+		}
+
+		return true;
 	}
 
 	/**
@@ -280,7 +323,9 @@ class ProjectCreate extends BaseCommand
 	 */
 	protected function initGitRepo(OutputInterface $output)
 	{
-		$command = sprintf('cd %s && git init', $this->getDirectory());
+		$project = $this->getProject();
+
+		$command = sprintf('cd %s && git init', $project->getRootDirectory());
 		$process = new Process($command);
 
 		$spinner = new ProcessSpinner($output, 'Initialising Git', $process);

@@ -50,7 +50,7 @@ class Spinner
 	/**
 	 * Perform state change - on to the next spin state
 	 */
-	protected function spin()
+	public function spin()
 	{
 		$this->state++;
 
@@ -81,7 +81,7 @@ class Spinner
 	 * @param string $status
 	 * @param string $type
 	 */
-	protected function updateStatus($status = null, $type = null)
+	public function updateStatus($status = null, $type = null)
 	{
 		$message = ' ' . trim($this->message);
 
@@ -114,7 +114,7 @@ class Spinner
 	/**
 	 * Clears the current line on the terminal
 	 */
-	protected function clearLine() 
+	public function clearLine() 
 	{
 		// Move the cursor to the beginning of the line
 		$this->output->write("\x0D");

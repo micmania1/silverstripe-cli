@@ -11,10 +11,6 @@ RUN apt-get install -qqy libapache2-mod-php5 php5-cli php5-common php5-tidy php5
 # Other useful stuff
 RUN apt-get install -qqy vim lynx git-core
 
-# Expose ports internally
-EXPOSE 80
-EXPOSE 443
-
 # Copy our startup script and set it to run
 COPY ./conf/docker-startup /opt/docker-startup
 RUN chmod +x /opt/docker-startup
@@ -33,5 +29,9 @@ RUN chown -R www-data:www-data /var/www/mysite
 RUN a2dissite 000-default.conf
 COPY conf/mysite.apache.conf /etc/apache2/sites-available/mysite.conf
 RUN a2ensite mysite.conf
+
+# Expose ports internally
+EXPOSE 80
+EXPOSE 443
 
 CMD /opt/docker-startup

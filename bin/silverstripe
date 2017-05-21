@@ -10,6 +10,7 @@ define('ROOT_DIR', dirname(__DIR__));
 define('COMPOSER_BIN', ROOT_DIR . '/vendor/bin/composer');
 define('FIXTURES_DIR', ROOT_DIR . '/fixtures');
 define('CLI_ASSETS', ROOT_DIR . '/cli-assets');
+define('CLI_VERSION', '0-experimental');
 
 $application = new Application();
 $application->setName('SilverStripe Cli');

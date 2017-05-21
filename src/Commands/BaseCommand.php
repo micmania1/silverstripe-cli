@@ -26,38 +26,4 @@ class BaseCommand extends Command
 		$this->displayHeader($output);
 	}
 
-	/**
-	 * @param string $directory
-	 *
-	 * @return boolean
-	 */
-	protected function isCliProject($directory)
-	{
-		return $this->hasCliFile($directory);
-	}
-
-	/**
-	 * @return string
-	 */
-	protected function getCliFile()
-	{
-		return static::CLI_FILE;
-	}
-
-	/**
-	 * @param string $directory
-	 *
-	 * @return array
-	 */
-	protected function hasCliFile($directory)
-	{
-		// If the silverstripe cli config file doesn't exist, then its not considered
-		// a silverstripe project
-		$cliFile = rtrim($directory, DIRECTORY_SEPARATOR)
-			. DIRECTORY_SEPARATOR
-			. $this->getCliFile();
-
-		return file_exists($cliFile);
-	}
-
 }
