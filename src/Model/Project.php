@@ -21,11 +21,23 @@ class Project
 	const WEB_DIRECTORY = 'www';
 
 	/**
+	 * @var ProjectConfigFile
+	 */
+	protected $cliFile;
+
+	/**
 	 * @param string $dir Project root directory
 	 */
 	public function __construct($dir)
 	{
 		$this->dir = $dir;
+	}
+
+	public function getName()
+	{
+		$parts = explode(DIRECTORY_SEPARATOR, $this->getRootDirectory());
+
+		return array_pop($parts);
 	}
 
 	/**
@@ -35,7 +47,7 @@ class Project
 	 */
 	public function getRootDirectory()
 	{
-		return $this->dir;
+		return rtrim($this->dir, DIRECTORY_SEPARATOR);
 	}
 
 	/**
@@ -88,7 +100,20 @@ class Project
 	 */
 	public function getCliFile()
 	{
-		return $this->getFile(self::CLI_FILE);
+		if($this->cliFile) {
+			return $this->cliFile;
+		}
+
+		$path = $this->getFile(self::CLI_FILE);
+		return $this->cliFile = new ProjectCliFile($path);
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getCliFileContent()
+	{
+		return Yaml::parse($this->getCliFile());
 	}
 
 	/**

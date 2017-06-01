@@ -1,14 +1,17 @@
 #!/bin/bash
 
-groupadd -g $SSCLI_GID $SSCLI_GROUPNAME
-useradd -u $SSCLI_UID -g $SSCLI_GROUPNAME $SSCLI_USERNAME
+groupadd -g "$SSCLI_GID" "$SSCLI_GROUPNAME"
+useradd -u "$SSCLI_UID" -g "$SSCLI_GROUPNAME" "$SSCLI_USERNAME"
 
 sed -i "s/www-data/$SSCLI_USERNAME/g" /etc/apache2/envvars
 
 service apache2 start
 service mysql start
 
+echo "CREATE USER IF NOT EXISTS '$SS_DATABASE_USERNAME'@'localhost' IDENTIFIED BY '$SS_DATABASE_PASSWORD'" | mysql -u root
+echo "GRANT ALL PRIVILEGES ON * . * TO '$SS_DATABASE_NAME'@'$SS_DATABASE_SERVER'" | mysql -u root
+
 WEB_DIR="/var/www/mysite/www"
-su -u $SSCLI_USERNAME php $WEB_DIR/framework/cli-script.php dev/build flush=1
+su -c "php $WEB_DIR/framework/cli-script.php dev/build flush=1" "$SSCLI_USERNAME"
 
 bash

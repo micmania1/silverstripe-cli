@@ -1,19 +1,21 @@
 <?php
 
-namespace micmania1\SilverStripeCli\EnvironmentProviders;
+namespace micmania1\SilverStripeCli;
 
 use Closure;
+use Symfony\Component\Console\Output\OutputInterface;
 
-interface Provider
+/**
+ * An environment is our interface to backend infrastructure. An
+ * environment may represent a single service (ie. vagrant LAMP stack)
+ * or may compose of multiple services (ie. Docker; web, db etc)
+ */
+interface EnvironmentInterface
 {
 	/**
 	 * This will build the initial environment
-	 *
-	 * @param Closure $callback - called each step of the build with line info
-	 *
-	 * @return boolean
 	 */
-	public function build(Closure $callback);
+	public function build(OutputInterface $output);
 
 	/**
 	 * This will give the status of the current environment
@@ -27,14 +29,14 @@ interface Provider
 	 *
 	 * @return array
 	 */
-	public function up();
+	public function start(OutputInterface $output);
 
 	/**
 	 * This will stop the current environment
 	 *
 	 * @return array
 	 */
-	public function down();
+	public function stop();
 
 	/**
 	 * This will export an sspak out of the current environment

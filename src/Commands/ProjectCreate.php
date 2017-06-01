@@ -119,7 +119,9 @@ class ProjectCreate extends BaseCommand
 
 		$this->runComposer($output);
 
-		$cliFile = basename($this->getProject()->getCliFile());
+		$cliFile = $this->getProject()
+			->getCliFile()
+			->getName();
 		$this->copyFixtureFileToProject($output, $cliFile);
 
 		$this->copyFixtureFileToProject($output, '.env');

@@ -19,6 +19,8 @@ class Spinner
 
 	protected $state = 0;
 
+	protected $hasRun = false;
+
 	public function __construct($output, $message, $time = 1)
 	{
 		$this->output = $output;
@@ -34,17 +36,37 @@ class Spinner
 	 */
 	public function run($status, $statusType)
 	{
+		if($this->output->isVerbose()) {
+			$this->updateStatus($status, $statusType);
+			$this->hasRun = true;
+			return;
+		}
+
 		$time = (time() + $this->time) * 1000000;
 		$currentTime = time() * 1000000;
 
 		while($currentTime < $time) {
 			$currentTime += self::SLEEP;
-			$this->spin();
+			$this->tick();
 		}
 
 		$this->clearLine();
 		$this->updateStatus($status, $statusType);
 		$this->output->writeln('');
+	}
+
+	public function tick()
+	{
+		if($this->output->isVerbose()) {
+			if(!$this->hasRun) {
+				$this->updateStatus($this->message);
+				$this->hasRun = true;
+			}
+
+			return;
+		}
+
+		$this->spin();
 	}
 
 	/**
