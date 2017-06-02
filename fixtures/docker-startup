@@ -5,6 +5,12 @@ useradd -u "$SSCLI_UID" -g "$SSCLI_GROUPNAME" "$SSCLI_USERNAME"
 
 sed -i "s/www-data/$SSCLI_USERNAME/g" /etc/apache2/envvars
 
+sed -i "s/{SS_DATABASE_USERNAME}/$SS_DATABASE_USERNAME/g" /etc/apache2/sites-available/mysite.conf
+sed -i "s/{SS_DATABASE_PASSWORD}/$SS_DATABASE_PASSWORD/g" /etc/apache2/sites-available/mysite.conf
+sed -i "s/{SS_DATABASE_SERVER}/$SS_DATABASE_SERVER/g" /etc/apache2/sites-available/mysite.conf
+sed -i "s/{SS_DATABASE_NAME}/$SS_DATABASE_NAME/g" /etc/apache2/sites-available/mysite.conf
+sed -i "s/{SS_DATABASE_PORT}/$SS_DATABASE_PORT/g" /etc/apache2/sites-available/mysite.conf
+
 service apache2 start
 service mysql start
 

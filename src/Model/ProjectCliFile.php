@@ -3,6 +3,7 @@
 namespace micmania1\SilverStripeCli\Model;
 
 use Symfony\Component\Yaml\Yaml;
+use Symfony\Component\Console\Exception\RuntimeException;
 
 class ProjectCliFile
 {

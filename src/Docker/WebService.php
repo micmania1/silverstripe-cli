@@ -7,6 +7,8 @@ use Docker\API\Model\ContainerConfig;
 use Docker\API\Model\PortBinding;
 use Docker\API\Model\HostConfig;
 use Docker\Context\Context;
+use RandomLib\Factory;
+use SecurityLib\Strength;
 
 class WebService extends AbstractService
 {
@@ -64,30 +66,32 @@ class WebService extends AbstractService
 		$groupInfo = posix_getgrgid($gid);
 		$groupName = $groupInfo = $groupInfo['name'];
 
-		$cliFile = $this->getProject()->getCliFile();
-		$dbUser = $cliFile->getOption('db_user');
-		$dbPass = $cliFile->getOption('db_pass');
+		$hostPort = $this->generateWebPort();
 
+		$randomId = $this->getRandomId();
 		$containerConfig->setEnv([
+			sprintf('SSCLI_ID=%', $randomId),
 			sprintf('SSCLI_USERNAME=%s', $userName),
 			sprintf('SSCLI_UID=%d', $uid),
-			sprintf('SSCLI_GROUPNAME=%s',$groupName),
+			sprintf('SSCLI_GROUPNAME=%s', $groupName),
+			sprintf('SSCLI_HOST_PORT=%d', $hostPort),
 			sprintf('SSCLI_GID=%d', $gid),
-			sprintf('SS_DATABASE_USERNAME=%s', $dbUser),
-			sprintf('SS_DATABASE_PASSWORD=%s', $dbPass),
-			sprintf('SS_DATABASE_SERVER=%s', "localhost"),
-			sprintf('SS_DATABASE_NAME=%s', $dbUser),
+			sprintf('SS_DATABASE_USERNAME=%s_%s', $this->generateDatabaseUser(), $randomId),
+			sprintf('SS_DATABASE_PASSWORD=%s', $this->generateDatabasePassword()),
+			sprintf('SS_DATABASE_SERVER=%s', $this->getDatabaseHost()),
+			sprintf('SS_DATABASE_NAME=%s_%s', $this->generateDatabaseName(), $randomId),
+			sprintf('SS_DATABASE_PORT=%d', '3306'),
 		]);
 
 		// Map ports
 		$portBinding = new PortBinding();
-		$portBinding->setHostPort('8080');
+		$portBinding->setHostPort($hostPort);
 		$portBinding->setHostIp('0.0.0.0');
 		$map = new \ArrayObject();
 		$map['80/tcp'] = [$portBinding];
 
 		$hostConfig = new HostConfig();
-		$hostConfig->setBinds([getcwd() . ':/var/www/mysite']);
+		$hostConfig->setBinds([$this->getProject()->getRootDirectory() . ':/var/www/mysite']);
 		$hostConfig->setPortBindings($map);
 		$containerConfig->setHostConfig($hostConfig);
 
@@ -99,5 +103,48 @@ class WebService extends AbstractService
 		$buildDir = $context->getDirectory() . DIRECTORY_SEPARATOR;
 		$this->copyFixture('mysite.apache.conf', $buildDir);
 		$this->copyFixture('docker-startup', $buildDir);
+	}
+
+	protected function generateDatabaseUser()
+	{
+		return $this->getProject()->getName();
+	}
+
+	protected function generateDatabasePassword()
+	{
+		$chars = 'abcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_1234567890';
+		return $this->getRandomGenerator()->generateString(32, $chars);
+	}
+
+	protected function getDatabaseHost()
+	{
+		return 'localhost';
+	}
+
+	protected function generateDatabaseName()
+	{
+		return $this->getProject()->getName();
+	}
+
+	/**
+	 * This random id will be used by the container internally to ensure we
+	 * don't get database name clashes and such.
+	 *
+	 * @return string
+	 */
+	protected function getRandomId()
+	{
+		return $this->getRandomGenerator()->generateString(6, 'abcdef1234567890');
+	}
+
+	protected function getRandomGenerator()
+	{
+		$factory = new Factory;
+		return $factory->getGenerator(new Strength(Strength::MEDIUM));
+	}
+
+	protected function generateWebPort()
+	{
+		return (string) $this->getRandomGenerator()->generateInt(8000, 8999);
 	}
 }

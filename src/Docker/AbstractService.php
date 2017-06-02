@@ -2,7 +2,6 @@
 
 namespace micmania1\SilverStripeCli\Docker;
 
-
 use Http\Client\Common\Exception\ClientErrorException;
 use Docker\Docker;
 use Docker\API\Model\BuildInfo;
@@ -91,8 +90,6 @@ abstract class AbstractService implements ServiceInterface
 		$spinner = new Spinner($output, 'Starting environment');
 		try {
 			$this->getContainerManager()->start($this->getName());
-			$spinner->updateStatus('OK', 'info');
-			$output->writeln('');
 		} catch (ClientErrorException $e) {
 			$spinner->updateStatus('FAIL', 'error');
 			$output->writeln('');
