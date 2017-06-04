@@ -36,7 +36,7 @@ interface EnvironmentInterface
 	 *
 	 * @return array
 	 */
-	public function stop();
+	public function stop(OutputInterface $output);
 
 	/**
 	 * This will export an sspak out of the current environment

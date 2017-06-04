@@ -50,7 +50,7 @@ interface ServiceInterface
 	/**
 	 * Stop the service
 	 */
-	public function stop();
+	public function stop(OutputInterface $output);
 
 	/**
 	 * Destroy the service

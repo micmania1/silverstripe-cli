@@ -44,6 +44,8 @@ class EnvUp extends BaseCommand
 		$environment->build($output);
 		$environment->start($output);
 
+		$output->emptyLine();
+
 		$table = new Table($output);
 		$table->setHeaders([new TableCell('Website Access', ['colspan' => 2])]);
 		$table->setStyle('compact');

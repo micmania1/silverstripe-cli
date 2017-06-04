@@ -4,7 +4,7 @@ namespace micmania1\SilverStripeCli\Docker;
 
 use Http\Client\Common\Exception\ClientErrorException;
 use Docker\Docker;
-use Docker\API\Model\BuildInfo;
+use Docker\API\Model\Buildsuccess;
 use Docker\API\Model\Container;
 use Docker\API\Model\Image;
 use Docker\Manager\ContainerManager;
@@ -107,19 +107,38 @@ abstract class AbstractService implements ServiceInterface
 
 	public function start(OutputInterface $output)
 	{
-		$spinner = new Spinner($output, 'Starting environment');
+		$output->writeStatus('Starting environment');
 		try {
 			$this->getContainerManager()->start($this->getName());
+
+			$output->clearLine();
+			$output->writeStatus('Starting environment', 'OK', 'success');
+			$output->emptyLine();
 		} catch (ClientErrorException $e) {
-			$spinner->writeStatus('FAIL', 'error');
-			$output->writeln('');
+			$output->clearLine();
+			$output->writeStatus('Starting environment', 'FAIL', 'error');
+			$output->emptyLine();
+
 			throw $e;
 		}
 	}
 
-	public function stop()
+	public function stop(OutputInterface $output)
 	{
-		$this->getContainerManager()->stop($this->getName());
+		$output->writeStatus('Stopping environment');
+		try {
+			$this->getContainerManager()->stop($this->getName());
+
+			$output->clearLine();
+			$output->writeStatus('Stopping environment', 'OK', 'success');
+			$output->emptyLine();
+		} catch (ClientErrorException $e) {
+			$output->clearLine();
+			$output->writeStatus('Stopping environment', 'FAIL', 'error');
+			$output->emptyLine();
+
+			throw $e;
+		}
 	}
 
 	public function destroy()
@@ -172,7 +191,7 @@ abstract class AbstractService implements ServiceInterface
 			}
 
 			$output->clearLine();
-			$output->writeStatus($message, 'OK', 'info');
+			$output->writeStatus($message, 'OK', 'success');
 			$output->emptyLine();
 		} catch (ClientErrorException $e) {
 			$output->clearLine();
@@ -205,7 +224,7 @@ abstract class AbstractService implements ServiceInterface
 			$spinner->tick();
 		}
 		$output->clearLine();
-		$output->writeStatus($message, 'OK', 'info');
+		$output->writeStatus($message, 'OK', 'success');
 		$output->emptyLine();
 	}
 

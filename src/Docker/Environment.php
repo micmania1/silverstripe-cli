@@ -77,9 +77,9 @@ class Environment implements EnvironmentInterface
 		$this->getService('web')->start($output);
 	}
 
-	public function stop()
+	public function stop(OutputInterface $output)
 	{
-		$this->getService('web')->stop();
+		$this->getService('web')->stop($output);
 	}
 
 	public function export()
