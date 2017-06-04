@@ -42,8 +42,8 @@ class Spinner
 			$this->tick();
 		}
 
-		$this->clearLine();
-		$this->updateStatus($status, $statusType);
+		$this->output->clearLine();
+		$this->output->writeStatus($this->message, $status, $statusType);
 		$this->output->writeln('');
 	}
 
@@ -59,72 +59,26 @@ class Spinner
 	{
 		$this->state++;
 
-		$this->clearLine();
+		$this->output->clearLine();
 
 		// Figure out our spinner state
 		switch($this->state) {
 			case 1:
-				$this->updateStatus('|');
+				$this->output->writeStatus($this->message, '|');
 				break;
 			case 2:
-				$this->updateStatus('/');
+				$this->output->writeStatus($this->message, '/');
 				break;
 			case 3:
-				$this->updateStatus('-');
+				$this->writeStatus($this->message, '-');
 				break;
 			case 4:
 			default:
-				$this->updateStatus('\\');
+				$this->writeStatus($this->message, '\\');
 				$this->state = 0;
 				break;
 		}
 
 		usleep(self::SLEEP);
-	}
-
-	/**
-	 * @param string $status
-	 * @param string $type
-	 */
-	public function updateStatus($status = null, $type = null)
-	{
-		$message = ' ' . trim($this->message);
-
-		// Because we can have tags in our message which won't be shown, we need
-		// to account for these in the padding by stripping them to calculate
-		// how much we actually need to pag.
-		$tagLength = strlen($message) - strlen(strip_tags($message));
-
-		$message = str_pad($message, BaseCommand::COLUMN_LENGTH + $tagLength, '.');
-
-		if(!empty($status)) {
-			$length = strlen($status);
-			$message = substr($message, 0, $length * -1);
-
-			if($type) {
-				$message = sprintf(
-					'%s<%3$s>%s</%3$s>',
-					$message,
-					$status,
-					$type
-				);
-			} else {
-				$message = sprintf('%s%s', $message, $status);
-			}
-		}
-
-		$this->output->write($message);
-	}
-
-	/**
-	 * Clears the current line on the terminal
-	 */
-	public function clearLine() 
-	{
-		// Move the cursor to the beginning of the line
-		$this->output->write("\x0D");
-
-		// Erase the line
-		$this->output->write("\x1B[2K");
 	}
 }

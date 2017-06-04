@@ -11,11 +11,12 @@ class EnvStatus extends Command
 	protected function configure()
 	{
 		$this->setName('env:status')
-			->setDescription('Current environment status');
+			->setDescription('Show the environment status');
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output)
 	{
-		$output->writeLn('Current Status: running');
+		$output->writeStatus('Current status', 'Running', 'info');
+		$output->emptyLine();
 	}
 }

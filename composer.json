@@ -16,6 +16,7 @@
         "symfony/filesystem": "^3.2",
         "czproject/git-php": "^3.9",
         "docker-php/docker-php": "^1.24",
-        "ircmaxell/random-lib": "^1.2"
+        "ircmaxell/random-lib": "^1.2",
+        "symfony/yaml": "^3.3"
     }
 }

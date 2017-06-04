@@ -6,11 +6,12 @@ require __DIR__ . '/../vendor/autoload.php';
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\Command;
 
+use micmania1\SilverStripeCli\Console\Output;
+
 define('ROOT_DIR', dirname(__DIR__));
 define('COMPOSER_BIN', ROOT_DIR . '/vendor/bin/composer');
 define('FIXTURES_DIR', ROOT_DIR . '/fixtures');
 define('CLI_ASSETS', ROOT_DIR . '/cli-assets');
-define('CLI_VERSION', '0-experimental');
 
 $application = new Application();
 $application->setName('SilverStripe Cli');
@@ -39,4 +40,6 @@ foreach($commands as $command) {
 	}
 }
 
-$application->run();
+$output = new Output();
+
+$application->run(null, $output);

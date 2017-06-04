@@ -20,19 +20,19 @@ class ProcessSpinner extends Spinner
 		$this->process->start();
 		
 		while($this->process->isRunning()) {
-			$this->spin();
+			$this->tick();
 		}
 
-		$this->clearLine();
+		$this->output->clearLine();
 
 		if(!$this->process->isSuccessful()) {
-			$this->updateStatus('FAIL', 'error');
+			$this->output->writeStatus('FAIL', 'error');
 			$this->output->writeln('');
 
 			throw new ProcessFailedException($this->process);
 		}
 
-		$this->updateStatus('OK', 'info');
+		$this->output->writeStatus('OK', 'info');
 		$this->output->writeln('');
 	}
 

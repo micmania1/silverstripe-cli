@@ -109,14 +109,6 @@ class Project
 	}
 
 	/**
-	 * @return array
-	 */
-	public function getCliFileContent()
-	{
-		return Yaml::parse($this->getCliFile());
-	}
-
-	/**
 	 * Checks to see if the current directory is a cli project
 	 *
 	 * @return boolean
@@ -133,7 +125,6 @@ class Project
 	 */
 	public function getCliVersion()
 	{
-		// @todo version should be stored within the .silverstripe-cli.yaml file
-		return CLI_VERSION;
+		return $this->getCliFile()->getOption('version');
 	}
 }
