@@ -5,6 +5,7 @@ require __DIR__ . '/../vendor/autoload.php';
 
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 
 use micmania1\SilverStripeCli\Console\Output;
 
@@ -41,5 +42,8 @@ foreach($commands as $command) {
 }
 
 $output = new Output();
+
+$successStyle = new OutputformatterStyle('white', 'green');
+$output->getFormatter()->setStyle('success', $successStyle);
 
 $application->run(null, $output);

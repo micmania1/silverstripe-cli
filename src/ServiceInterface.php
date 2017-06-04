@@ -6,6 +6,16 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 interface ServiceInterface
 {
+	const STATUS_NOT_READY = 'NOT READY';
+
+	const STATUS_RUNNING = 'RUNNING';
+
+	const STATUS_RESTARTING = 'RESTARTING';
+
+	const STATUS_PAUSED = 'PAUSED';
+
+	const STATUS_STOPPED = 'STOPPED';
+
 	/**
 	 * Returns a unique identifier for the service
 	 *
@@ -24,6 +34,13 @@ interface ServiceInterface
 	 * @return boolean
 	 */
 	public function exists();
+
+	/**
+	 * Fetch the status of the service.
+	 *
+	 * @return string 
+	 */
+	public function status();
 
 	/**
 	 * Start the service

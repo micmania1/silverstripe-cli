@@ -70,11 +70,11 @@ class Spinner
 				$this->output->writeStatus($this->message, '/');
 				break;
 			case 3:
-				$this->writeStatus($this->message, '-');
+				$this->output->writeStatus($this->message, '-');
 				break;
 			case 4:
 			default:
-				$this->writeStatus($this->message, '\\');
+				$this->output->writeStatus($this->message, '\\');
 				$this->state = 0;
 				break;
 		}

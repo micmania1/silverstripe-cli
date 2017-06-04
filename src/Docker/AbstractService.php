@@ -85,13 +85,33 @@ abstract class AbstractService implements ServiceInterface
 		return $this->imageExists() && $this->containerExists();
 	}
 
+	public function status()
+	{
+		if(!$this->exists()) {
+			return ServiceInterface::STATUS_NOT_READY;
+		}
+
+		$container = $this->getContainerManager()->find($this->getName());
+		$state = $container->getState();
+
+		if ($state->getPaused()) {
+			return ServiceInterface::STATUS_PAUSED;
+		} else if ($state->getRestarting()) {
+			return ServiceInterface::STATUS_RESTARTING;
+		} else if ($state->getRunning()) {
+			return ServiceInterface::STATUS_RUNNING;
+		}
+
+		return ServiceInterface::STATUS_STOPPED;
+	}
+
 	public function start(OutputInterface $output)
 	{
 		$spinner = new Spinner($output, 'Starting environment');
 		try {
 			$this->getContainerManager()->start($this->getName());
 		} catch (ClientErrorException $e) {
-			$spinner->updateStatus('FAIL', 'error');
+			$spinner->writeStatus('FAIL', 'error');
 			$output->writeln('');
 			throw $e;
 		}
@@ -133,8 +153,7 @@ abstract class AbstractService implements ServiceInterface
 
 		$params = ['t' => $this->getImageName()];
 
-		$spinner = new Spinner($output, 'Creating base image');
-
+		$message = 'Creating base image';
 		try {
 			$response = $manager->build(
 				$context->toStream(), 
@@ -143,17 +162,21 @@ abstract class AbstractService implements ServiceInterface
 			);
 			$stream = $response->getBody();
 
+			$spinner = new Spinner($output, $message);
 			while(!$stream->eof()) {
-				$output->writeln($stream->read(56), OutputInterface::VERBOSITY_VERBOSE);
+				$output->writeln(
+					$stream->getContents(), 
+					OutputInterface::VERBOSITY_VERBOSE
+				);
 				$spinner->tick();
 			}
 
-			$spinner->clearLine();
-			$spinner->updateStatus('OK', 'info');
-			$output->writeln('');
+			$output->clearLine();
+			$output->writeStatus($message, 'OK', 'info');
+			$output->emptyLine();
 		} catch (ClientErrorException $e) {
-			$spinner->clearLine();
-			$spinner->updateStatus('FAIL', 'error');
+			$output->clearLine();
+			$output->writeStatus($message, 'FAIL', 'error');
 			$output->writeln('');
 			throw $e;
 		}
@@ -172,14 +195,18 @@ abstract class AbstractService implements ServiceInterface
 		);
 		$stream = $response->getBody();
 
-		$spinner = new Spinner($output, 'Building your container');
+		$message = 'Building your container';
+		$spinner = new Spinner($output, $message);
 		while(!$stream->eof()) {
-			$output->writeln($stream->read(56), OutputInterface::VERBOSITY_VERBOSE);
+			$output->writeln(
+				$stream->getContents(), 
+				OutputInterface::VERBOSITY_VERBOSE
+			);
 			$spinner->tick();
 		}
-		$spinner->clearLine();
-		$spinner->updateStatus('OK', 'info');
-		$output->writeln('');
+		$output->clearLine();
+		$output->writeStatus($message, 'OK', 'info');
+		$output->emptyLine();
 	}
 
 	protected function copyFixtures(Context $context) { }

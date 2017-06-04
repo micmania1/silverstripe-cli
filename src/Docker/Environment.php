@@ -69,7 +69,7 @@ class Environment implements EnvironmentInterface
 
 	public function status()
 	{
-		return [];
+		return $this->getService('web')->status();
 	}
 
 	public function start(OutputInterface $output)
