@@ -184,7 +184,7 @@ abstract class AbstractService implements ServiceInterface
 			$spinner = new Spinner($output, $message);
 			while(!$stream->eof()) {
 				$output->writeln(
-					$stream->getContents(), 
+					$stream->read(128), 
 					OutputInterface::VERBOSITY_VERBOSE
 				);
 				$spinner->tick();
@@ -218,7 +218,7 @@ abstract class AbstractService implements ServiceInterface
 		$spinner = new Spinner($output, $message);
 		while(!$stream->eof()) {
 			$output->writeln(
-				$stream->getContents(), 
+				$stream->read(128), 
 				OutputInterface::VERBOSITY_VERBOSE
 			);
 			$spinner->tick();

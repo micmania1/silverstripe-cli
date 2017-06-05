@@ -26,14 +26,14 @@ class ProcessSpinner extends Spinner
 		$this->output->clearLine();
 
 		if(!$this->process->isSuccessful()) {
-			$this->output->writeStatus('FAIL', 'error');
-			$this->output->writeln('');
+			$this->output->writeStatus($this->message, 'FAIL', 'error');
+			$this->output->emptyLine();
 
 			throw new ProcessFailedException($this->process);
 		}
 
-		$this->output->writeStatus('OK', 'info');
-		$this->output->writeln('');
+		$this->output->writeStatus($this->message, 'OK', 'success');
+		$this->output->emptyLine();
 	}
 
 }

@@ -131,9 +131,9 @@ class ProjectCreate extends BaseCommand
 			$this->initGitRepo($output);
 		}
 
-		$output->writeln('');
-		$output->writeln(" <info>Project created</info> \xF0\x9F\x8D\xBA");
-		$output->writeln('');
+		$output->emptyLine();
+		$output->writeln(" <success>Project created</success> \xF0\x9F\x8D\xBA");
+		$output->emptyLine();
 	}
 
 	/**
@@ -219,7 +219,7 @@ class ProjectCreate extends BaseCommand
 		try {
 			$filesystem->remove($project->getRootDirectory());
 			$status = 'OK';
-			$type = 'info';
+			$type = 'success';
 			$spinner->run($status, $type);
 		} catch (IOExceptionInterface $e) {
 			$status = 'FAIL';
@@ -284,9 +284,10 @@ class ProjectCreate extends BaseCommand
 
 		$result = stream_copy_to_stream($source, $dest);
 
-		$spinner = new Spinner($output, sprintf('Creating %s', $file));
+		$message = sprintf('Creating %s', $file);
+		$spinner = new Spinner($output, $message);
 		if($result !== FALSE) {
-			$spinner->run('OK', 'info');
+			$spinner->run('OK', 'success');
 		} else {
 			$spinner->run('FAIL', 'error');
 		}
@@ -302,13 +303,14 @@ class ProjectCreate extends BaseCommand
 
 	protected function removeUnnecessaryProjectFiles(OutputInterface $output)
 	{
-		$spinner = new Spinner($output, 'Removing unnecessary project files');
+		$message = 'Removing unnecessary project files';
+		$spinner = new Spinner($output, $message);
 		try {
 			$project = $this->getProject();
 			$project->removeFile('www/install.php');
 			$project->removeFile('www/install-frameworkmissing.html');
 
-			$spinner->run('OK', 'info');
+			$spinner->run('OK', 'success');
 		} catch (IOExceptionInterface $e) {
 			$spinner->run('FAIL', 'error');
 
