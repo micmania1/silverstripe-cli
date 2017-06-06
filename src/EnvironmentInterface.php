@@ -22,7 +22,7 @@ interface EnvironmentInterface
 	 *
 	 * @return array
 	 */
-	public function status();
+	public function status(OutputInterface $output);
 
 	/**
 	 * This will launch the current environment

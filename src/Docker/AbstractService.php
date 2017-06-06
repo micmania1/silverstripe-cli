@@ -85,24 +85,35 @@ abstract class AbstractService implements ServiceInterface
 		return $this->imageExists() && $this->containerExists();
 	}
 
-	public function status()
+	public function status(OutputInterface $output)
 	{
-		if(!$this->exists()) {
-			return ServiceInterface::STATUS_NOT_READY;
+		$container = $this->getContainerManager()->find($this->getName());
+		if(!$container) {
+			$output->emptyLine();
+			$output->writeln(' The environment is not ready. Run env:up');
+			$output->emptyLine();
+			return;
 		}
 
-		$container = $this->getContainerManager()->find($this->getName());
 		$state = $container->getState();
 
 		if ($state->getPaused()) {
-			return ServiceInterface::STATUS_PAUSED;
+			$status = ServiceInterface::STATUS_PAUSED;
+			$type = 'warning';
 		} else if ($state->getRestarting()) {
-			return ServiceInterface::STATUS_RESTARTING;
+			$status = ServiceInterface::STATUS_RESTARTING;
+			$type = 'warning';
 		} else if ($state->getRunning()) {
-			return ServiceInterface::STATUS_RUNNING;
+			$status = ServiceInterface::STATUS_RUNNING;
+			$type = 'success';
+		} else {
+			$status = ServiceInterface::STATUS_STOPPED;
+			$type = 'error';
 		}
 
-		return ServiceInterface::STATUS_STOPPED;
+		$output->writeStatus('Environment status', $status, $type);
+		$output->emptyLine();
+		$output->emptyLine();
 	}
 
 	public function start(OutputInterface $output)
@@ -285,12 +296,44 @@ abstract class AbstractService implements ServiceInterface
 	 */
 	protected function containerExists()
 	{
+		return $this->getContainer() instanceof Container;
+	}
+
+	/**
+	 * Fetch the container
+	 *
+	 * @return Container|false
+	 */
+	protected function getContainer()
+	{
 		try {
 			$container = $this->getContainerManager()->find($this->getName());
 
-			return $container instanceof Container;
+			return $container;
 		} catch (ClientErrorException $e) {
 			return false;
 		}
+	}
+
+	/**
+	 * Returns an array of environment variables
+	 *
+	 * @return array
+	 */
+	protected function getEnvVars()
+	{
+		$container = $this->getContainer();
+		if(!$container) {
+			return [];
+		}
+
+		$raw = $container->getConfig()->getEnv();
+		$vars = [];
+		foreach($raw as $var) {
+			$split = explode('=', $var, 2);
+			$vars[$split[0]] = $split[1];
+		}
+
+		return $vars;
 	}
 }

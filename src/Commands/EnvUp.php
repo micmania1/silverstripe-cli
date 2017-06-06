@@ -5,8 +5,6 @@ namespace micmania1\SilverStripeCli\Commands;
 use Docker\Docker;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Helper\Table;
-use Symfony\Component\Console\Helper\TableCell;
 
 use micmania1\SilverStripeCli\Model\Project;
 use micmania1\SilverStripeCli\Docker\Environment;
@@ -43,37 +41,6 @@ class EnvUp extends BaseCommand
 		$environment = $this->getEnvironment();
 		$environment->build($output);
 		$environment->start($output);
-
-		$output->emptyLine();
-
-		$table = new Table($output);
-		$table->setHeaders([new TableCell('Website Access', ['colspan' => 2])]);
-		$table->setStyle('compact');
-		$table->setRows([
-			['URL', 'http://localhost:8080'],
-			['Admin URL', 'http://localhost:8080/admin'],
-			['CMS Admin', 'admin'],
-			['CMS Password', 'password']
-		]);
-		$table->setColumnWidth(0, ceil(BaseCommand::COLUMN_LENGTH / 2));
-		$table->setColumnWidth(1, ceil(BaseCommand::COLUMN_LENGTH / 2));
-		$table->render();
-		$output->writeln('');
-
-		$table = new Table($output);
-		$table->setHeaders([new TableCell('Database Access', ['colspan' => 2])]);
-		$table->setStyle('compact');
-		$table->setRows([
-			['Database name', 'dbname'],
-			['Username', 'someuser'],
-			['Password', 'somepassword'],
-			['Host', 'localhost'],
-			['Port', '3306'],
-		]);
-		$table->setColumnWidth(0, ceil(BaseCommand::COLUMN_LENGTH / 2));
-		$table->setColumnWidth(1, ceil(BaseCommand::COLUMN_LENGTH / 2));
-		$table->render();
-		$output->writeln('');
 	}
 
 	/**

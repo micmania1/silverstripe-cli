@@ -10,6 +10,12 @@ use Docker\Context\Context;
 use RandomLib\Factory;
 use SecurityLib\Strength;
 
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Helper\Table;
+use Symfony\Component\Console\Helper\TableCell;
+
+use micmania1\SilverStripeCli\Commands\BaseCommand;
+
 class WebService extends AbstractService
 {
 	const MAJOR_VERSION = 1;
@@ -17,6 +23,13 @@ class WebService extends AbstractService
 	public function getImageName()
 	{
 		return 'sscli-web:' . self::MAJOR_VERSION;
+	}
+
+	public function status(OutputInterface $output)
+	{
+		parent::status($output);
+
+		$this->displayDetails($output);
 	}
 
 	protected function getImageBuilder()
@@ -70,7 +83,7 @@ class WebService extends AbstractService
 
 		$randomId = $this->getRandomId();
 		$containerConfig->setEnv([
-			sprintf('SSCLI_ID=%', $randomId),
+			sprintf('SSCLI_ID=%s', $randomId),
 			sprintf('SSCLI_USERNAME=%s', $userName),
 			sprintf('SSCLI_UID=%d', $uid),
 			sprintf('SSCLI_GROUPNAME=%s', $groupName),
@@ -146,5 +159,58 @@ class WebService extends AbstractService
 	protected function generateWebPort()
 	{
 		return (string) $this->getRandomGenerator()->generateInt(8000, 8999);
+	}
+
+	protected function displayDetails(OutputInterface $output) 
+	{
+		$this->displayCmsDetails($output);
+		$this->displayDatabaseDetails($output);
+	}
+
+	protected function displayCmsDetails(OutputInterface $output)
+	{
+		$env = $this->getEnvVars();
+		$dotEnv = $this->getProject()->getDotEnv();
+
+		if(isset($dotEnv['SS_DEFAULT_ADMIN_USERNAME'], $dotEnv['SS_DEFAULT_ADMIN_PASSWORD'])) {
+			$adminUsername = $dotEnv['SS_DEFAULT_ADMIN_USERNAME'];
+			$adminPassword = $dotEnv['SS_DEFAULT_ADMIN_PASSWORD'];
+		} else {
+			$adminUsername = '<warning>No username</warning>';
+			$adminPassword = '<warning>No password</warning>';
+		}
+
+		$table = new Table($output);
+		$table->setHeaders([new TableCell('Website Access', ['colspan' => 2])]);
+		$table->setStyle('compact');
+		$table->setRows([
+			['URL', sprintf('http://localhost:%d', $env['SSCLI_HOST_PORT'])],
+			['Admin URL', sprintf('http://localhost:%d/admin', $env['SSCLI_HOST_PORT'])],
+			['CMS Admin', $adminUsername],
+			['CMS Password', $adminPassword],
+		]);
+		$table->setColumnWidth(0, ceil(BaseCommand::COLUMN_LENGTH / 2));
+		$table->setColumnWidth(1, ceil(BaseCommand::COLUMN_LENGTH / 2));
+		$table->render();
+		$output->writeln('');
+	}
+
+	protected function displayDatabaseDetails(OutputInterface $output)
+	{
+		$env = $this->getEnvVars();
+		$table = new Table($output);
+		$table->setHeaders([new TableCell('Database Access', ['colspan' => 2])]);
+		$table->setStyle('compact');
+		$table->setRows([
+			['Database name', $env['SS_DATABASE_NAME']],
+			['Username', $env['SS_DATABASE_USERNAME']],
+			['Password', $env['SS_DATABASE_PASSWORD']],
+			['Host', $env['SS_DATABASE_SERVER']],
+			['Port', $env['SS_DATABASE_PORT']],
+		]);
+		$table->setColumnWidth(0, ceil(BaseCommand::COLUMN_LENGTH / 2));
+		$table->setColumnWidth(1, ceil(BaseCommand::COLUMN_LENGTH / 2));
+		$table->render();
+		$output->writeln('');
 	}
 }

@@ -43,7 +43,10 @@ foreach($commands as $command) {
 
 $output = new Output();
 
-$successStyle = new OutputformatterStyle('white', 'green');
+$successStyle = new OutputFormatterStyle('white', 'green');
 $output->getFormatter()->setStyle('success', $successStyle);
+
+$warningStyle = new OutputFormatterStyle('yellow');
+$output->getFormatter()->setStyle('warning', $warningStyle);
 
 $application->run(null, $output);

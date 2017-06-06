@@ -40,7 +40,7 @@ interface ServiceInterface
 	 *
 	 * @return string 
 	 */
-	public function status();
+	public function status(OutputInterface $output);
 
 	/**
 	 * Start the service

@@ -4,6 +4,8 @@ namespace micmania1\SilverStripeCli\Model;
 
 use Symfony\Component\Filesystem\Filesystem;
 
+use micmania1\SilverStripeCli\Helpers\DotEnvMemoryLoader;
+
 class Project
 {
 	/**
@@ -126,5 +128,13 @@ class Project
 	public function getCliVersion()
 	{
 		return $this->getCliFile()->getOption('version');
+	}
+
+	public function getDotEnv()
+	{
+		$file = $this->getFile('.env');
+		$loader = new DotEnvMemoryLoader($file);
+
+		return $loader->getEnvVars();
 	}
 }

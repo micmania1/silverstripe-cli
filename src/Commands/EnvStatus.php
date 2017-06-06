@@ -40,26 +40,6 @@ class EnvStatus extends BaseCommand
 
 	protected function execute(InputInterface $input, OutputInterface $output)
 	{
-		$status = $this->environment->status();
-
-		$type = null;
-		switch($status) {
-			case ServiceInterface::STATUS_NOT_READY: 
-			case ServiceInterface::STATUS_STOPPED:
-			case ServiceInterface::STATUS_PAUSED:
-				$type = 'error';
-				break;
-			case ServiceInterface::STATUS_RUNNING:
-				$type = 'success';
-				break;
-			case ServiceInterface::STATUS_RESTARTING:
-				$type = 'comment';
-				break;
-		}
-
-		$output->emptyLine();
-		$output->writeStatus('Environment status', $status, $type);
-		$output->emptyLine();
-		$output->emptyLine();
+		$this->environment->status($output);
 	}
 }
