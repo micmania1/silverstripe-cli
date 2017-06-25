@@ -81,7 +81,7 @@ class Project
 	 * @param string
 	 *
 	 * @return boolean
-	 * 
+	 *
 	 * @throws Symfony\Component\Filesystem\Exception\IOExceptionInterface
 	 */
 	public function removeFile($file)
@@ -130,6 +130,11 @@ class Project
 		return $this->getCliFile()->getOption('version');
 	}
 
+    /**
+     * Loads the dot env file and returns its values as a key/value pair
+     *
+     * @return string[]
+     */
 	public function getDotEnv()
 	{
 		$file = $this->getFile('.env');

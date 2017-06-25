@@ -38,14 +38,14 @@ interface ServiceInterface
 	/**
 	 * Fetch the status of the service.
 	 *
-	 * @return string 
+	 * @return string
 	 */
 	public function status(OutputInterface $output);
 
 	/**
 	 * Start the service
 	 */
-	public function start(OutputInterface $output);
+	public function start(OutputInterface $output, array $config = []);
 
 	/**
 	 * Stop the service
@@ -65,5 +65,5 @@ interface ServiceInterface
 	/**
 	 * Export the service
 	 */
-	public function export();	
+	public function export();
 }

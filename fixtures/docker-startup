@@ -12,12 +12,8 @@ sed -i "s/{SS_DATABASE_NAME}/$SS_DATABASE_NAME/g" /etc/apache2/sites-available/m
 sed -i "s/{SS_DATABASE_PORT}/$SS_DATABASE_PORT/g" /etc/apache2/sites-available/mysite.conf
 
 service apache2 start
-service mysql start
 
-echo "CREATE USER IF NOT EXISTS '$SS_DATABASE_USERNAME'@'localhost' IDENTIFIED BY '$SS_DATABASE_PASSWORD'" | mysql -u root
-echo "GRANT ALL PRIVILEGES ON * . * TO '$SS_DATABASE_NAME'@'$SS_DATABASE_SERVER'" | mysql -u root
-
-WEB_DIR="/var/www/mysite/www"
-su -c "php $WEB_DIR/framework/cli-script.php dev/build flush=1" "$SSCLI_USERNAME"
+# WEB_DIR="/var/www/mysite/www"
+# su -c "php $WEB_DIR/framework/cli-script.php dev/build flush=1" "$SSCLI_USERNAME"
 
 bash

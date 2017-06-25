@@ -29,17 +29,28 @@ class WebService extends AbstractService
 	{
 		parent::status($output);
 
+        $output->emptyLine();
+
 		$this->displayDetails($output);
 	}
+
+	public function start(OutputInterface $output, array $config = [])
+	{
+        parent::start($output, $config);
+
+        $this->exec(
+            $output,
+            sprintf('/opt/update-hosts %s database', $config['database'])
+        );
+    }
 
 	protected function getImageBuilder()
 	{
 		$builder = new ContextBuilder();
 		$builder->from('debian:stretch-slim');
 
-		// Install, MySQL, Apache, PHP
+		// Install, Apache, PHP
 		$builder->run('apt-get update -qq');
-		$builder->run('apt-get install -qqy mariadb-server');
 		$builder->run('apt-get install -qqy apache2 libapache2-mod-php php-cli php-common php-tidy php-gd php-intl php-apcu php-curl php-xdebug php-mcrypt php-mysql php-mbstring php-dom');
 
 		// Install other useful stuff
@@ -59,6 +70,9 @@ class WebService extends AbstractService
 		$builder->copy('docker-startup', '/opt/docker-startup');
 		$builder->run('chmod +x /opt/docker-startup');
 
+		$builder->copy('update-hosts', '/opt/update-hosts');
+		$builder->run('chmod +x /opt/update-hosts');
+
 		return $builder;
 	}
 
@@ -73,7 +87,7 @@ class WebService extends AbstractService
 
 		$uid = posix_getuid();
 		$userInfo = posix_getpwuid($uid);
-		$userName = $userInfo['name'];  
+		$userName = $userInfo['name'];
 
 		$gid = posix_getgid();
 		$groupInfo = posix_getgrgid($gid);
@@ -89,11 +103,11 @@ class WebService extends AbstractService
 			sprintf('SSCLI_GROUPNAME=%s', $groupName),
 			sprintf('SSCLI_HOST_PORT=%d', $hostPort),
 			sprintf('SSCLI_GID=%d', $gid),
-			sprintf('SS_DATABASE_USERNAME=%s_%s', $this->generateDatabaseUser(), $randomId),
-			sprintf('SS_DATABASE_PASSWORD=%s', $this->generateDatabasePassword()),
-			sprintf('SS_DATABASE_SERVER=%s', $this->getDatabaseHost()),
-			sprintf('SS_DATABASE_NAME=%s_%s', $this->generateDatabaseName(), $randomId),
-			sprintf('SS_DATABASE_PORT=%d', '3306'),
+			sprintf('SS_DATABASE_USERNAME=%s', $this->getDatabaseConfig('user')),
+			sprintf('SS_DATABASE_PASSWORD=%s', $this->getDatabaseConfig('password')),
+			sprintf('SS_DATABASE_SERVER=%s', $this->getDatabaseConfig('host')),
+			sprintf('SS_DATABASE_NAME=%s', $this->getDatabaseConfig('name')),
+			sprintf('SS_DATABASE_PORT=%d', $this->getDatabaseConfig('port')),
 		]);
 
 		// Map ports
@@ -106,6 +120,7 @@ class WebService extends AbstractService
 		$hostConfig = new HostConfig();
 		$hostConfig->setBinds([$this->getProject()->getRootDirectory() . ':/var/www/mysite']);
 		$hostConfig->setPortBindings($map);
+
 		$containerConfig->setHostConfig($hostConfig);
 
 		return $containerConfig;
@@ -116,7 +131,26 @@ class WebService extends AbstractService
 		$buildDir = $context->getDirectory() . DIRECTORY_SEPARATOR;
 		$this->copyFixture('mysite.apache.conf', $buildDir);
 		$this->copyFixture('docker-startup', $buildDir);
+		$this->copyFixture('update-hosts', $buildDir);
 	}
+
+    public function setDatabaseConfig(array $config)
+    {
+        $this->dbConfig = $config;
+    }
+
+    public function getDatabaseConfig($key = null, $default = null)
+    {
+        if(isset($this->dbConfig[$key])) {
+            return $this->dbConfig[$key];
+        }
+
+        if($default) {
+            return $default;
+        }
+
+        throw new \RuntimeException(sprintf("'%s' missing from dbConfig", $key));
+    }
 
 	protected function generateDatabaseUser()
 	{
@@ -161,13 +195,13 @@ class WebService extends AbstractService
 		return (string) $this->getRandomGenerator()->generateInt(8000, 8999);
 	}
 
-	protected function displayDetails(OutputInterface $output) 
+	protected function displayDetails(OutputInterface $output)
 	{
-		$this->displayCmsDetails($output);
+		$this->displayWebsiteDetails($output);
 		$this->displayDatabaseDetails($output);
 	}
 
-	protected function displayCmsDetails(OutputInterface $output)
+	protected function displayWebsiteDetails(OutputInterface $output)
 	{
 		$env = $this->getEnvVars();
 		$dotEnv = $this->getProject()->getDotEnv();
@@ -205,8 +239,8 @@ class WebService extends AbstractService
 			['Database name', $env['SS_DATABASE_NAME']],
 			['Username', $env['SS_DATABASE_USERNAME']],
 			['Password', $env['SS_DATABASE_PASSWORD']],
-			['Host', $env['SS_DATABASE_SERVER']],
-			['Port', $env['SS_DATABASE_PORT']],
+			['Host', 'localhost'],
+			['Port', '9000'],
 		]);
 		$table->setColumnWidth(0, ceil(BaseCommand::COLUMN_LENGTH / 2));
 		$table->setColumnWidth(1, ceil(BaseCommand::COLUMN_LENGTH / 2));

@@ -5,6 +5,7 @@ namespace micmania1\SilverStripeCli\Commands;
 use Docker\Docker;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Exception\RuntimeException;
 
 use micmania1\SilverStripeCli\Model\Project;
 use micmania1\SilverStripeCli\Docker\Environment;
@@ -39,7 +40,9 @@ class EnvUp extends BaseCommand
 	protected function execute(InputInterface $input, OutputInterface $output)
 	{
 		$environment = $this->getEnvironment();
-		$environment->build($output);
+        if(!$environment->build($output)) {
+            throw new RuntimeException('Unable to build environment');
+        }
 		$environment->start($output);
 	}
 

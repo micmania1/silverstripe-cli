@@ -10,6 +10,8 @@ use Docker\API\Model\Image;
 use Docker\Manager\ContainerManager;
 use Docker\Manager\ImageManager;
 use Docker\Context\Context;
+use Docker\API\Model\ExecConfig;
+use Docker\API\Model\ExecStartConfig;
 
 use Symfony\Component\Console\Exception\RuntimeException;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -38,7 +40,7 @@ abstract class AbstractService implements ServiceInterface
 	protected $docker;
 
 	/**
-	 * @return Docker\Context\ContextBuilder
+	 * @return Docker\Context\ContextBuilder|null
 	 */
 	abstract protected function getImageBuilder();
 
@@ -78,6 +80,8 @@ abstract class AbstractService implements ServiceInterface
 		if(!$this->containerExists() && $this->imageExists()) {
 			$this->buildContainer($output);
 		}
+
+        return $this->containerExists();
 	}
 
 	public function exists()
@@ -111,23 +115,32 @@ abstract class AbstractService implements ServiceInterface
 			$type = 'error';
 		}
 
-		$output->writeStatus('Environment status', $status, $type);
-		$output->emptyLine();
+        $message = sprintf('%s status', ltrim($container->getName(), '/'));
+		$output->writeStatus($message, $status, $type);
 		$output->emptyLine();
 	}
 
-	public function start(OutputInterface $output)
+	public function start(OutputInterface $output, array $config = [])
 	{
-		$output->writeStatus('Starting environment');
+		$output->writeStatus(sprintf('Starting environment %s', $this->getName()));
 		try {
-			$this->getContainerManager()->start($this->getName());
+			$response = $this->getContainerManager()->start($this->getName());
 
 			$output->clearLine();
-			$output->writeStatus('Starting environment', 'OK', 'success');
+            $output->writeStatus(
+                sprintf('Starting environment %s', $this->getName()),
+                'OK',
+                'success'
+            );
 			$output->emptyLine();
+
 		} catch (ClientErrorException $e) {
 			$output->clearLine();
-			$output->writeStatus('Starting environment', 'FAIL', 'error');
+            $output->writeStatus(
+                sprintf('Starting environment %s', $this->getName()),
+                'FAIL',
+                'error'
+            );
 			$output->emptyLine();
 
 			throw $e;
@@ -136,16 +149,17 @@ abstract class AbstractService implements ServiceInterface
 
 	public function stop(OutputInterface $output)
 	{
-		$output->writeStatus('Stopping environment');
+        $message = sprintf('Stopping environment %s', $this->getName());
+		$output->writeStatus($message);
 		try {
 			$this->getContainerManager()->stop($this->getName());
 
 			$output->clearLine();
-			$output->writeStatus('Stopping environment', 'OK', 'success');
+			$output->writeStatus($message, 'OK', 'success');
 			$output->emptyLine();
 		} catch (ClientErrorException $e) {
 			$output->clearLine();
-			$output->writeStatus('Stopping environment', 'FAIL', 'error');
+			$output->writeStatus($message, 'FAIL', 'error');
 			$output->emptyLine();
 
 			throw $e;
@@ -172,11 +186,46 @@ abstract class AbstractService implements ServiceInterface
 		return $this->name;
 	}
 
+    public function getIp()
+    {
+        $container = $this->getContainer();
+        if(!$container) {
+            throw new RuntimeException('Containier does not exist');
+        }
+
+        $config = $container->getConfig()->getNetworkingConfig();
+
+        if(!isset($config['IPAddress'])) {
+            throw new RuntimeException('Unable to obtain database ip address');
+        }
+
+        return $config['IPAddress'];
+    }
+
+    protected function exec(OutputInterface $output, $cmd)
+    {
+        $execManager = $this->docker->getExecManager();
+
+        $execConfig = new ExecConfig();
+
+        $cmd = explode(' ', $cmd);
+        $execConfig->setCmd($cmd);
+
+        $id = $this->getContainer()->getId();
+        $response = $execManager->create($id, $execConfig);
+
+        $startConfig = new ExecStartConfig();
+        $startConfig->setDetach(true);
+        $execManager->start($response->getId(), $startConfig);
+
+    }
+
 	protected function buildImage(OutputInterface $output)
 	{
-		$manager = $this->getImageManager();	
+		$manager = $this->getImageManager();
 
 		$builder = $this->getImageBuilder();
+
 		$context = $builder->getContext();
 
 		$this->copyFixtures($context);
@@ -186,7 +235,7 @@ abstract class AbstractService implements ServiceInterface
 		$message = 'Creating base image';
 		try {
 			$response = $manager->build(
-				$context->toStream(), 
+				$context->toStream(),
 				$params,
 				ImageManager::FETCH_RESPONSE
 			);
@@ -195,7 +244,7 @@ abstract class AbstractService implements ServiceInterface
 			$spinner = new Spinner($output, $message);
 			while(!$stream->eof()) {
 				$output->writeln(
-					$stream->read(128), 
+					$stream->read(128),
 					OutputInterface::VERBOSITY_VERBOSE
 				);
 				$spinner->tick();
@@ -219,8 +268,8 @@ abstract class AbstractService implements ServiceInterface
 
 		$params = ['name' => $this->getName()];
 		$response = $manager->create(
-			$config, 
-			$params, 
+			$config,
+			$params,
 			ContainerManager::FETCH_STREAM
 		);
 		$stream = $response->getBody();
@@ -229,7 +278,7 @@ abstract class AbstractService implements ServiceInterface
 		$spinner = new Spinner($output, $message);
 		while(!$stream->eof()) {
 			$output->writeln(
-				$stream->read(128), 
+				$stream->read(128),
 				OutputInterface::VERBOSITY_VERBOSE
 			);
 			$spinner->tick();
