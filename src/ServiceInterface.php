@@ -26,7 +26,7 @@ interface ServiceInterface
     /**
      * Build the service
      */
-    public function build(OutputInterface $output);
+    public function build(OutputInterface $output, $config = []);
 
     /**
      * Whether the service exists and is ready to start

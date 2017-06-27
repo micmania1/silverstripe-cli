@@ -49,7 +49,7 @@ class WebService extends AbstractService
         $this->exec($output, $command);
     }
 
-    protected function getImageBuilder()
+    protected function getImageBuilder($config = [])
     {
         $builder = new ContextBuilder();
         $builder->from('debian:stretch-slim');
@@ -81,7 +81,7 @@ class WebService extends AbstractService
         return $builder;
     }
 
-    protected function getContainerConfig()
+    protected function getContainerConfig($config = [])
     {
         $containerConfig = new ContainerConfig();
         $containerConfig->setImage($this->getImageName());
@@ -108,11 +108,11 @@ class WebService extends AbstractService
             sprintf('SSCLI_GROUPNAME=%s', $groupName),
             sprintf('SSCLI_HOST_PORT=%d', $hostPort),
             sprintf('SSCLI_GID=%d', $gid),
-            sprintf('SS_DATABASE_USERNAME=%s', $this->getConfig('user')),
-            sprintf('SS_DATABASE_PASSWORD=%s', $this->getConfig('password')),
-            sprintf('SS_DATABASE_SERVER=%s', $this->getConfig('host')),
-            sprintf('SS_DATABASE_NAME=%s', $this->getConfig('name')),
-            sprintf('SS_DATABASE_PORT=%d', $this->getConfig('port')),
+            sprintf('SS_DATABASE_USERNAME=%s', $config['dbUser']),
+            sprintf('SS_DATABASE_PASSWORD=%s', $config['dbPassword']),
+            sprintf('SS_DATABASE_SERVER=%s', $config['dbHost']),
+            sprintf('SS_DATABASE_NAME=%s', $config['dbName']),
+            sprintf('SS_DATABASE_PORT=%d', $config['dbPort']),
         ]);
 
         // Map ports

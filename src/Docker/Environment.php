@@ -17,6 +17,9 @@ use Docker\Manager\ContainerManager;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Console\Output\OutputInterface;
 
+use RandomLib\Factory;
+use SecurityLib\Strength;
+
 use micmania1\SilverStripeCli\ServiceInterface;
 use micmania1\SilverStripeCli\EnvironmentInterface;
 use micmania1\SilverStripeCli\Model\Project;
@@ -68,22 +71,42 @@ class Environment implements EnvironmentInterface
      */
     public function build(OutputInterface $output)
     {
+        return $this->buildDatabaseService($output)
+            && $this->buildWebService($output);
+    }
+
+    protected function buildDatabaseService(OutputInterface $output)
+    {
+        $generator = (new Factory)->getGenerator(new Strength(Strength::MEDIUM));
+        $password = $generator->generateString(32);
+
+        $config = ['rootPass' => $password];
+
         $db = $this->getService('db');
-        $built = $db->build($output);
-        if (!$built) {
-            throw new RuntimeException('Unable to build database service');
+        $db->build($output, $config);
+
+        return true;
+    }
+
+    protected function buildWebService(OutputInterface $output)
+    {
+        $vars = $this->getService('db')->getEnvVars();
+        if (!isset($vars['MYSQL_ROOT_PASSWORD'])) {
+            throw new RuntimeException('MYSQL_ROOT_PASSWORD is missing');
         }
 
-        $web = $this->getService('web');
-        $web->setConfig([
+        $config = [
             'dbHost' => 'database',
             'dbUser' => 'root',
-            'dbPassword' => 'rootpass',
+            'dbPassword' => $vars['MYSQL_ROOT_PASSWORD'],
             'dbPort' => 3306,
             'dbName' => 'mysite',
-        ]);
+        ];
 
-        return $web->build($output);
+        $web = $this->getService('web');
+        $web->build($output, $config);
+
+        return true;
     }
 
     public function status(OutputInterface $output)

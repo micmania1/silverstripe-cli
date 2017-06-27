@@ -13,6 +13,7 @@ use SecurityLib\Strength;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Helper\TableCell;
+use Symfony\Component\Console\Exception\RuntimeException;
 
 use micmania1\SilverStripeCli\Commands\BaseCommand;
 
@@ -20,13 +21,13 @@ class MariaDbService extends AbstractService
 {
     public function getImageName()
     {
-        return 'mariadb-shared';
+        return 'mariadb';
     }
 
     /**
      * {@inheritdoc}
      */
-    protected function getImageBuilder()
+    protected function getImageBuilder($config = [])
     {
         $builder = new ContextBuilder();
         $builder->from('mariadb:latest');
@@ -34,13 +35,17 @@ class MariaDbService extends AbstractService
         return $builder;
     }
 
-    protected function getContainerConfig()
+    protected function getContainerConfig($config = [])
     {
+        if (!isset($config['rootPass'])) {
+            throw new RuntimeException('rootPass config missing');
+        }
+
         $containerConfig = new ContainerConfig();
         $containerConfig->setImage($this->getImageName());
         $containerConfig->setTty(true);
         $containerConfig->setEnv([
-            'MYSQL_ROOT_PASSWORD=rootpass',
+            sprintf('MYSQL_ROOT_PASSWORD=%s', $config['rootPass']),
         ]);
         $containerConfig->setExposedPorts(['3306/tcp' => (object)[]]);
 
@@ -57,5 +62,10 @@ class MariaDbService extends AbstractService
         $containerConfig->setHostConfig($hostConfig);
 
         return $containerConfig;
+    }
+
+    protected function copyFixtures(Context $context)
+    {
+        // noop
     }
 }

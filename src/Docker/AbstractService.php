@@ -20,6 +20,9 @@ use micmania1\SilverStripeCli\ServiceInterface;
 use micmania1\SilverStripeCli\Helpers\Spinner;
 use micmania1\SilverStripeCli\Model\Project;
 
+/**
+ * Shared functionality for all docker services
+ */
 abstract class AbstractService implements ServiceInterface
 {
     /**
@@ -40,24 +43,24 @@ abstract class AbstractService implements ServiceInterface
     protected $docker;
 
     /**
-     * @var string[]
-     */
-    protected $config;
-
-    /**
      * @return Docker\Context\ContextBuilder|null
      */
-    abstract protected function getImageBuilder();
+    abstract protected function getImageBuilder($config = []);
 
     /**
      * @return Docker\Manager\ContainerConfig
      */
-    abstract protected function getContainerConfig();
+    abstract protected function getContainerConfig($config = []);
 
     /**
      * @return string
      */
     abstract protected function getImageName();
+
+    /**
+     * @param Context $context
+     */
+    abstract protected function copyFixtures(Context $context);
 
     /**
      * @param Project $project
@@ -76,14 +79,14 @@ abstract class AbstractService implements ServiceInterface
         return $this->project;
     }
 
-    public function build(OutputInterface $output)
+    public function build(OutputInterface $output, $config = [])
     {
         if (!$this->imageExists()) {
-            $this->buildImage($output);
+            $this->buildImage($output, $config);
         }
 
         if (!$this->containerExists() && $this->imageExists()) {
-            $this->buildContainer($output);
+            $this->buildContainer($output, $config);
         }
 
         return $this->containerExists();
@@ -205,22 +208,26 @@ abstract class AbstractService implements ServiceInterface
         return $ip;
     }
 
-    public function setConfig(array $config)
+    /**
+     * Returns an array of environment variables
+     *
+     * @return array
+     */
+    public function getEnvVars()
     {
-        $this->config = $config;
-    }
-
-    public function getConfig($key = null, $default = null)
-    {
-        if (isset($this->config[$key])) {
-            return $this->config[$key];
+        $container = $this->getContainer();
+        if (!$container) {
+            return [];
         }
 
-        if ($default) {
-            return $default;
+        $raw = $container->getConfig()->getEnv();
+        $vars = [];
+        foreach ($raw as $var) {
+            $split = explode('=', $var, 2);
+            $vars[$split[0]] = $split[1];
         }
 
-        throw new \RuntimeException(sprintf("'%s' missing from dbConfig", $key));
+        return $vars;
     }
 
     protected function exec(OutputInterface $output, $cmd)
@@ -239,11 +246,11 @@ abstract class AbstractService implements ServiceInterface
         $execManager->start($response->getId(), $startConfig);
     }
 
-    protected function buildImage(OutputInterface $output)
+    protected function buildImage(OutputInterface $output, $config = [])
     {
         $manager = $this->getImageManager();
 
-        $builder = $this->getImageBuilder();
+        $builder = $this->getImageBuilder($config);
 
         $context = $builder->getContext();
 
@@ -280,10 +287,10 @@ abstract class AbstractService implements ServiceInterface
         }
     }
 
-    protected function buildContainer(OutputInterface $output)
+    protected function buildContainer(OutputInterface $output, $config = [])
     {
         $manager = $this->getContainerManager();
-        $config = $this->getContainerConfig();
+        $config = $this->getContainerConfig($config);
 
         $params = ['name' => $this->getName()];
         $response = $manager->create(
@@ -305,10 +312,6 @@ abstract class AbstractService implements ServiceInterface
         $output->clearLine();
         $output->writeStatus($message, 'OK', 'success');
         $output->emptyLine();
-    }
-
-    protected function copyFixtures(Context $context)
-    {
     }
 
     /**
@@ -383,27 +386,5 @@ abstract class AbstractService implements ServiceInterface
         } catch (ClientErrorException $e) {
             return false;
         }
-    }
-
-    /**
-     * Returns an array of environment variables
-     *
-     * @return array
-     */
-    protected function getEnvVars()
-    {
-        $container = $this->getContainer();
-        if (!$container) {
-            return [];
-        }
-
-        $raw = $container->getConfig()->getEnv();
-        $vars = [];
-        foreach ($raw as $var) {
-            $split = explode('=', $var, 2);
-            $vars[$split[0]] = $split[1];
-        }
-
-        return $vars;
     }
 }
