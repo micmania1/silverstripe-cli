@@ -6,35 +6,35 @@ use Dotenv\Loader;
 
 class DotEnvMemoryLoader extends Loader
 {
-	/**
-	 * @var array
-	 */
-	protected $vars = [];
+    /**
+     * @var array
+     */
+    protected $vars = [];
 
-	/**
-	 * Instead of writing our environment variables to _SERVER and putenv,
-	 * we're only going to store them in an array
-	 *
-	 * {@inheritdoc}
-	 */
-	public function setEnvironmentVariable($name, $value = null)
-	{
+    /**
+     * Instead of writing our environment variables to _SERVER and putenv,
+     * we're only going to store them in an array
+     *
+     * {@inheritdoc}
+     */
+    public function setEnvironmentVariable($name, $value = null)
+    {
         list($name, $value) = $this->normaliseEnvironmentVariable($name, $value);
 
-		$this->vars[$name] = $value;
-	}
+        $this->vars[$name] = $value;
+    }
 
-	/**
-	 * @return array
-	 */
-	public function getEnvVars()
-	{
-		if(!empty($this->vars)) {
-			return $this->vars;
-		}
+    /**
+     * @return array
+     */
+    public function getEnvVars()
+    {
+        if (!empty($this->vars)) {
+            return $this->vars;
+        }
 
-		$this->load();
+        $this->load();
 
-		return $this->vars;
-	}
+        return $this->vars;
+    }
 }

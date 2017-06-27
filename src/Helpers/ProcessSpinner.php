@@ -6,34 +6,33 @@ use Symfony\Component\Process\Exception\ProcessFailedException;
 
 class ProcessSpinner extends Spinner
 {
-	protected $process;
+    protected $process;
 
-	public function __construct($output, $message, $process)
-	{
-		parent::__construct($output, $message);
+    public function __construct($output, $message, $process)
+    {
+        parent::__construct($output, $message);
 
-		$this->process = $process;
-	}
+        $this->process = $process;
+    }
 
-	public function run()
-	{
-		$this->process->start();
-		
-		while($this->process->isRunning()) {
-			$this->tick();
-		}
+    public function run()
+    {
+        $this->process->start();
+        
+        while ($this->process->isRunning()) {
+            $this->tick();
+        }
 
-		$this->output->clearLine();
+        $this->output->clearLine();
 
-		if(!$this->process->isSuccessful()) {
-			$this->output->writeStatus($this->message, 'FAIL', 'error');
-			$this->output->emptyLine();
+        if (!$this->process->isSuccessful()) {
+            $this->output->writeStatus($this->message, 'FAIL', 'error');
+            $this->output->emptyLine();
 
-			throw new ProcessFailedException($this->process);
-		}
+            throw new ProcessFailedException($this->process);
+        }
 
-		$this->output->writeStatus($this->message, 'OK', 'success');
-		$this->output->emptyLine();
-	}
-
+        $this->output->writeStatus($this->message, 'OK', 'success');
+        $this->output->emptyLine();
+    }
 }

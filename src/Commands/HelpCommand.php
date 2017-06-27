@@ -8,18 +8,18 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class HelpCommand extends ListCommand
 {
-	use CommandHeader;
+    use CommandHeader;
 
-	protected function configure()
-	{
-		parent::configure();
-		$this->setName('silverstripe');
-		$this->setHidden(true);
-	}
+    protected function configure()
+    {
+        parent::configure();
+        $this->setName('silverstripe');
+        $this->setHidden(true);
+    }
 
-	protected function initialize(InputInterface $input, OutputInterface $output)
-	{
-		$this->displayHeader($output);
-		parent::initialize($input, $output);
-	}
+    protected function initialize(InputInterface $input, OutputInterface $output)
+    {
+        $this->displayHeader($output);
+        parent::initialize($input, $output);
+    }
 }

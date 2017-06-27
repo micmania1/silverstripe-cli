@@ -13,44 +13,44 @@ use micmania1\SilverStripeCli\Helpers\Spinner;
 
 class EnvUp extends BaseCommand
 {
-	/**
-	 * @var Environment
-	 */
-	protected $environment;
+    /**
+     * @var Environment
+     */
+    protected $environment;
 
-	protected function configure()
-	{
-		$this->setName('env:up')
-			->setDescription('Start up the environment');
-	}
+    protected function configure()
+    {
+        $this->setName('env:up')
+            ->setDescription('Start up the environment');
+    }
 
-	protected function initialize(InputInterface $input, OutputInterface $output)
-	{
-		parent::initialize($input, $output);
+    protected function initialize(InputInterface $input, OutputInterface $output)
+    {
+        parent::initialize($input, $output);
 
-		$project = new Project(getcwd());
-		if(!$project->isCli()) {
-			throw new \Exception('You must be in a SilverStripe Cli project to run this command');
-		}
+        $project = new Project(getcwd());
+        if (!$project->isCli()) {
+            throw new \Exception('You must be in a SilverStripe Cli project to run this command');
+        }
 
-		$docker = new Docker();
-		$this->environment = new Environment($project, $docker);
-	}
+        $docker = new Docker();
+        $this->environment = new Environment($project, $docker);
+    }
 
-	protected function execute(InputInterface $input, OutputInterface $output)
-	{
-		$environment = $this->getEnvironment();
-        if(!$environment->build($output)) {
+    protected function execute(InputInterface $input, OutputInterface $output)
+    {
+        $environment = $this->getEnvironment();
+        if (!$environment->build($output)) {
             throw new RuntimeException('Unable to build environment');
         }
-		$environment->start($output);
-	}
+        $environment->start($output);
+    }
 
-	/**
-	 * @returns EnvironmentInterface
-	 */
-	protected function getEnvironment()
-	{
-		return $this->environment;
-	}
+    /**
+     * @returns EnvironmentInterface
+     */
+    protected function getEnvironment()
+    {
+        return $this->environment;
+    }
 }

@@ -8,14 +8,14 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class GenerateModule extends Command
 {
-	protected function configure()
-	{
-		$this->setName('generate:module')
-			->setDescription('Generate a SilverStripe module');
-	}
+    protected function configure()
+    {
+        $this->setName('generate:module')
+            ->setDescription('Generate a SilverStripe module');
+    }
 
-	protected function execute(InputInterface $input, OutputInterface $output)
-	{
-		$output->writeLn('Component created');
-	}
+    protected function execute(InputInterface $input, OutputInterface $output)
+    {
+        $output->writeLn('Component created');
+    }
 }

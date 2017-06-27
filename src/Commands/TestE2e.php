@@ -8,13 +8,13 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class TestE2e extends Command
 {
-	protected function configure()
-	{
-		$this->setName('test:e2e')
-			->setDescription('Run e2e tests');
-	}
+    protected function configure()
+    {
+        $this->setName('test:e2e')
+            ->setDescription('Run e2e tests');
+    }
 
-	protected function execute(InputInterface $input, OutputInterface $output)
-	{
-	}
+    protected function execute(InputInterface $input, OutputInterface $output)
+    {
+    }
 }

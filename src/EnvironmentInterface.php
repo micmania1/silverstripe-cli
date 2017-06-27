@@ -12,45 +12,45 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 interface EnvironmentInterface
 {
-	/**
-	 * This will build the initial environment
-	 */
-	public function build(OutputInterface $output);
+    /**
+     * This will build the initial environment
+     */
+    public function build(OutputInterface $output);
 
-	/**
-	 * This will give the status of the current environment
-	 *
-	 * @return array
-	 */
-	public function status(OutputInterface $output);
+    /**
+     * This will give the status of the current environment
+     *
+     * @return array
+     */
+    public function status(OutputInterface $output);
 
-	/**
-	 * This will launch the current environment
-	 *
-	 * @return array
-	 */
-	public function start(OutputInterface $output);
+    /**
+     * This will launch the current environment
+     *
+     * @return array
+     */
+    public function start(OutputInterface $output);
 
-	/**
-	 * This will stop the current environment
-	 *
-	 * @return array
-	 */
-	public function stop(OutputInterface $output);
+    /**
+     * This will stop the current environment
+     *
+     * @return array
+     */
+    public function stop(OutputInterface $output);
 
-	/**
-	 * This will export an sspak out of the current environment
-	 *
-	 * @return string file path to sspak file
-	 */
-	public function export();
+    /**
+     * This will export an sspak out of the current environment
+     *
+     * @return string file path to sspak file
+     */
+    public function export();
 
-	/**
-	 * This will import an sspak into the current environment
-	 *
-	 * @param file path to sspak file
-	 *
-	 * @return boolean
-	 */
-	public function import($file);
+    /**
+     * This will import an sspak into the current environment
+     *
+     * @param file path to sspak file
+     *
+     * @return boolean
+     */
+    public function import($file);
 }

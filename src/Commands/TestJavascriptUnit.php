@@ -8,13 +8,13 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class TestJavascriptUnit extends Command
 {
-	protected function configure()
-	{
-		$this->setName('test:js:unit')
-			->setDescription('Run javascript unite tests');
-	}
+    protected function configure()
+    {
+        $this->setName('test:js:unit')
+            ->setDescription('Run javascript unite tests');
+    }
 
-	protected function execute(InputInterface $input, OutputInterface $output)
-	{
-	}
+    protected function execute(InputInterface $input, OutputInterface $output)
+    {
+    }
 }
