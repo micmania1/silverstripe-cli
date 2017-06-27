@@ -39,6 +39,11 @@ abstract class AbstractService implements ServiceInterface
 	 */
 	protected $docker;
 
+    /**
+     * @var string[]
+     */
+    protected $config;
+
 	/**
 	 * @return Docker\Context\ContextBuilder|null
 	 */
@@ -199,6 +204,24 @@ abstract class AbstractService implements ServiceInterface
         }
 
         return $ip;
+    }
+
+    public function setConfig(array $config)
+    {
+        $this->config = $config;
+    }
+
+    public function getConfig($key = null, $default = null)
+    {
+        if(isset($this->config[$key])) {
+            return $this->config[$key];
+        }
+
+        if($default) {
+            return $default;
+        }
+
+        throw new \RuntimeException(sprintf("'%s' missing from dbConfig", $key));
     }
 
     protected function exec(OutputInterface $output, $cmd)

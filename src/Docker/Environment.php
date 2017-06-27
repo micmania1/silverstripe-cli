@@ -75,12 +75,12 @@ class Environment implements EnvironmentInterface
 		}
 
 		$web = $this->getService('web');
-		$web->setDatabaseConfig([
-			'host' => 'database',
-			'user' => 'root',
-			'password' => 'rootpass',
-			'port' => 3306,
-			'name' => 'mysite',
+		$web->setConfig([
+			'dbHost' => 'database',
+			'dbUser' => 'root',
+			'dbPassword' => 'rootpass',
+			'dbPort' => 3306,
+			'dbName' => 'mysite',
 		]);
 
 		return $web->build($output);

@@ -108,11 +108,11 @@ class WebService extends AbstractService
 			sprintf('SSCLI_GROUPNAME=%s', $groupName),
 			sprintf('SSCLI_HOST_PORT=%d', $hostPort),
 			sprintf('SSCLI_GID=%d', $gid),
-			sprintf('SS_DATABASE_USERNAME=%s', $this->getDatabaseConfig('user')),
-			sprintf('SS_DATABASE_PASSWORD=%s', $this->getDatabaseConfig('password')),
-			sprintf('SS_DATABASE_SERVER=%s', $this->getDatabaseConfig('host')),
-			sprintf('SS_DATABASE_NAME=%s', $this->getDatabaseConfig('name')),
-			sprintf('SS_DATABASE_PORT=%d', $this->getDatabaseConfig('port')),
+			sprintf('SS_DATABASE_USERNAME=%s', $this->getConfig('user')),
+			sprintf('SS_DATABASE_PASSWORD=%s', $this->getConfig('password')),
+			sprintf('SS_DATABASE_SERVER=%s', $this->getConfig('host')),
+			sprintf('SS_DATABASE_NAME=%s', $this->getConfig('name')),
+			sprintf('SS_DATABASE_PORT=%d', $this->getConfig('port')),
 		]);
 
 		// Map ports
@@ -138,24 +138,6 @@ class WebService extends AbstractService
 		$this->copyFixture('docker-startup', $buildDir);
 		$this->copyFixture('update-hosts', $buildDir);
 	}
-
-    public function setDatabaseConfig(array $config)
-    {
-        $this->dbConfig = $config;
-    }
-
-    public function getDatabaseConfig($key = null, $default = null)
-    {
-        if(isset($this->dbConfig[$key])) {
-            return $this->dbConfig[$key];
-        }
-
-        if($default) {
-            return $default;
-        }
-
-        throw new \RuntimeException(sprintf("'%s' missing from dbConfig", $key));
-    }
 
 	protected function generateDatabaseUser()
 	{
