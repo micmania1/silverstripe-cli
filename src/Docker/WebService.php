@@ -38,10 +38,15 @@ class WebService extends AbstractService
 	{
         parent::start($output, $config);
 
-        $this->exec(
-            $output,
-            sprintf('/opt/update-hosts %s database', $config['database'])
-        );
+        if (isset($config['databaseIp'])) {
+            $this->updateDatabaseIp($output, $config['databaseIp']);
+        }
+    }
+
+    protected function updateDatabaseIp(OutputInterface $output, $ip)
+    {
+        $command = sprintf('/opt/update-hosts %s database', $ip);
+        $this->exec($output, $command);
     }
 
 	protected function getImageBuilder()

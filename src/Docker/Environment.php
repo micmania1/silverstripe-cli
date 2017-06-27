@@ -46,8 +46,8 @@ class Environment implements EnvironmentInterface
 		$this->project = $project;
 
 		$name = $this->getProject()->getName();
-        $dbName = 'database-shared';
-        $webName = $name . '-web';
+		$dbName = 'database-shared';
+		$webName = $name . '-web';
 
 		$this->addService('db', new MariaDbService($project, $dbName, $docker));
 		$this->addService('web', new WebService($project, $webName, $docker));
@@ -68,20 +68,20 @@ class Environment implements EnvironmentInterface
 	 */
 	public function build(OutputInterface $output)
 	{
-        $db = $this->getService('db');
-        $built = $db->build($output);
-        if(!$built) {
-            throw new RuntimeException('Unable to build database service');
-        }
+		$db = $this->getService('db');
+		$built = $db->build($output);
+		if(!$built) {
+			throw new RuntimeException('Unable to build database service');
+		}
 
-        $web = $this->getService('web');
-        $web->setDatabaseConfig([
-            'host' => 'database',
-            'user' => 'root',
-            'password' => 'rootpass',
-            'port' => 3306,
-            'name' => 'mysite',
-        ]);
+		$web = $this->getService('web');
+		$web->setDatabaseConfig([
+			'host' => 'database',
+			'user' => 'root',
+			'password' => 'rootpass',
+			'port' => 3306,
+			'name' => 'mysite',
+		]);
 
 		return $web->build($output);
 	}
@@ -94,12 +94,13 @@ class Environment implements EnvironmentInterface
 
 	public function start(OutputInterface $output)
 	{
-        $db = $this->getService('db');
+		$db = $this->getService('db');
 		$db->start($output);
 
-        // $ip = $db->getIp();
-        $ip = '172.17.0.2';
-		$this->getService('web')->start($output, ['database' => $ip]);
+		$this->getService('web')->start(
+			$output,
+			['databaseIp' => $db->getIp()]
+		);
 	}
 
 	public function stop(OutputInterface $output)

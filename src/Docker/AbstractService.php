@@ -189,35 +189,32 @@ abstract class AbstractService implements ServiceInterface
     public function getIp()
     {
         $container = $this->getContainer();
-        if(!$container) {
+        if (!$container) {
             throw new RuntimeException('Containier does not exist');
         }
 
-        $config = $container->getConfig()->getNetworkingConfig();
-
-        if(!isset($config['IPAddress'])) {
+        $ip = $container->getNetworkSettings()->getIPAddress();
+        if (empty($ip)) {
             throw new RuntimeException('Unable to obtain database ip address');
         }
 
-        return $config['IPAddress'];
+        return $ip;
     }
 
     protected function exec(OutputInterface $output, $cmd)
     {
-        $execManager = $this->docker->getExecManager();
+        $cmd = explode(' ', $cmd);
+        $id = $this->getContainer()->getId();
 
         $execConfig = new ExecConfig();
-
-        $cmd = explode(' ', $cmd);
         $execConfig->setCmd($cmd);
 
-        $id = $this->getContainer()->getId();
+        $execManager = $this->docker->getExecManager();
         $response = $execManager->create($id, $execConfig);
 
         $startConfig = new ExecStartConfig();
         $startConfig->setDetach(true);
         $execManager->start($response->getId(), $startConfig);
-
     }
 
 	protected function buildImage(OutputInterface $output)
