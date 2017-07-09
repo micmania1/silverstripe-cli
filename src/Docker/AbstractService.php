@@ -26,11 +26,6 @@ use micmania1\SilverStripeCli\Model\Project;
 abstract class AbstractService implements ServiceInterface
 {
     /**
-     * @var Project
-     */
-    protected $project;
-
-    /**
      * Unique identifier for this service
      *
      * @var string
@@ -63,20 +58,13 @@ abstract class AbstractService implements ServiceInterface
     abstract protected function copyFixtures(Context $context);
 
     /**
-     * @param Project $project
      * @param string $name
      * @param Docker $docker
      */
-    public function __construct(Project $project, $name, Docker $docker)
+    public function __construct($name, Docker $docker)
     {
-        $this->project = $project;
         $this->name = $name;
         $this->docker = $docker;
-    }
-
-    public function getProject()
-    {
-        return $this->project;
     }
 
     public function build(OutputInterface $output, $config = [])

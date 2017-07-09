@@ -34,7 +34,7 @@ class ProjectCreate extends BaseCommand
     /**
      * The SilverStripe version to install. We only support 4+.
      */
-    protected $version = '@dev';
+    protected $version = '@beta';
 
     /**
      * @var Project

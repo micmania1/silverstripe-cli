@@ -18,39 +18,22 @@ class EnvUp extends BaseCommand
      */
     protected $environment;
 
+    public function __construct(Environment $environment)
+    {
+        parent::__construct();
+
+        $this->environment = $environment;
+    }
+
     protected function configure()
     {
         $this->setName('env:up')
             ->setDescription('Start up the environment');
     }
 
-    protected function initialize(InputInterface $input, OutputInterface $output)
-    {
-        parent::initialize($input, $output);
-
-        $project = new Project(getcwd());
-        if (!$project->isCli()) {
-            throw new \Exception('You must be in a SilverStripe Cli project to run this command');
-        }
-
-        $docker = new Docker();
-        $this->environment = new Environment($project, $docker);
-    }
-
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $environment = $this->getEnvironment();
-        if (!$environment->build($output)) {
-            throw new RuntimeException('Unable to build environment');
-        }
-        $environment->start($output);
-    }
-
-    /**
-     * @returns EnvironmentInterface
-     */
-    protected function getEnvironment()
-    {
-        return $this->environment;
+        $this->environment->build($output);
+        $this->environment->start($output);
     }
 }

@@ -4,25 +4,18 @@ namespace micmania1\SilverStripeCli\Docker;
 
 use Closure;
 use Exception;
-
-use Docker\Docker;
-use Docker\Context\ContextBuilder;
-use Docker\Manager\ImageManager;
-use Docker\API\Model\Buildinfo;
-use Docker\API\Model\ContainerConfig;
-use Docker\API\Model\HostConfig;
-use Docker\API\Model\PortBinding;
-use Docker\Manager\ContainerManager;
-
+use PDO;
+use PDOException;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Console\Output\OutputInterface;
-
-use RandomLib\Factory;
-use SecurityLib\Strength;
-
+use Symfony\Component\Console\Exception\RuntimeException;
+use Symfony\Component\Console\Helper\Table;
+use Symfony\Component\Console\Helper\TableCell;
+use RandomLib\Generator;
 use micmania1\SilverStripeCli\ServiceInterface;
 use micmania1\SilverStripeCli\EnvironmentInterface;
 use micmania1\SilverStripeCli\Model\Project;
+use micmania1\SilverStripeCli\Commands\BaseCommand;
 
 class Environment implements EnvironmentInterface
 {
@@ -32,38 +25,33 @@ class Environment implements EnvironmentInterface
     protected $project;
 
     /**
-     * @var DockerService
+     * @var Generator
      */
-    protected $docker;
+    protected $generator;
 
     /**
-     * @var micmania1\SilverStripeCli\ServiceInterface[]
+     * @var MariaDbService
      */
-    protected $services = [];
+    protected $dbService;
+
+    /**
+     * @var WebService
+     */
+    protected $webService;
 
     /**
      * @param Project $project
      */
-    public function __construct(Project $project, Docker $docker)
-    {
+    public function __construct(
+        Project $project,
+        Generator $generator,
+        MariaDbService $dbService,
+        WebService $webService
+    ) {
         $this->project = $project;
-
-        $name = $this->getProject()->getName();
-        $dbName = 'database-shared';
-        $webName = $name . '-web';
-
-        $this->addService('db', new MariaDbService($project, $dbName, $docker));
-        $this->addService('web', new WebService($project, $webName, $docker));
-    }
-
-    public function addService($name, ServiceInterface $service)
-    {
-        $this->services[$name] = $service;
-    }
-
-    public function getService($name)
-    {
-        return $this->services[$name];
+        $this->generator = $generator;
+        $this->dbService = $dbService;
+        $this->webService = $webService;
     }
 
     /**
@@ -75,61 +63,46 @@ class Environment implements EnvironmentInterface
             && $this->buildWebService($output);
     }
 
-    protected function buildDatabaseService(OutputInterface $output)
-    {
-        $generator = (new Factory)->getGenerator(new Strength(Strength::MEDIUM));
-        $password = $generator->generateString(32);
-
-        $config = ['rootPass' => $password];
-
-        $db = $this->getService('db');
-        $db->build($output, $config);
-
-        return true;
-    }
-
-    protected function buildWebService(OutputInterface $output)
-    {
-        $vars = $this->getService('db')->getEnvVars();
-        if (!isset($vars['MYSQL_ROOT_PASSWORD'])) {
-            throw new RuntimeException('MYSQL_ROOT_PASSWORD is missing');
-        }
-
-        $config = [
-            'dbHost' => 'database',
-            'dbUser' => 'root',
-            'dbPassword' => $vars['MYSQL_ROOT_PASSWORD'],
-            'dbPort' => 3306,
-            'dbName' => 'mysite',
-        ];
-
-        $web = $this->getService('web');
-        $web->build($output, $config);
-
-        return true;
-    }
-
     public function status(OutputInterface $output)
     {
-        $this->getService('db')->status($output);
-        $this->getService('web')->status($output);
+        $this->dbService->status($output);
+        $this->webService->status($output);
+
+        $output->emptyLine();
+
+        $this->displayWebsiteDetails($output);
+        $this->displayDatabaseDetails($output);
     }
 
     public function start(OutputInterface $output)
     {
-        $db = $this->getService('db');
-        $db->start($output);
+        // We need to start the db in order to obtain an ip address
+        $this->dbService->start($output);
 
-        $this->getService('web')->start(
-            $output,
-            ['databaseIp' => $db->getIp()]
-        );
+        $dbVars = $this->dbService->getEnvVars();
+        $webVars = $this->webService->getEnvVars();
+
+        $config = [
+            'dbIp' => $this->dbService->getIp(),
+            'dbRootUser' => 'root',
+            'dbRootPassword' => $dbVars['MYSQL_ROOT_PASSWORD'],
+            'dbPort' => 9000,
+            'dbName' => $webVars['SS_DATABASE_NAME'],
+            'dbUser' => $webVars['SS_DATABASE_USERNAME'],
+            'dbPassword' => $webVars['SS_DATABASE_PASSWORD'],
+        ];
+
+        // Ensure the web instance db details are set in MySQL
+        $this->ensureDatabaseExists($config);
+
+        // Start the web service
+        $this->webService->start($output, $config);
     }
 
     public function stop(OutputInterface $output)
     {
-        $this->getService('db')->stop($output);
-        $this->getService('web')->stop($output);
+        $this->dbService->stop($output);
+        $this->webService->stop($output);
     }
 
     public function export()
@@ -142,8 +115,147 @@ class Environment implements EnvironmentInterface
         throw new Exception('Not implemented');
     }
 
+    protected function buildDatabaseService(OutputInterface $output)
+    {
+        $password = $this->generator->generateString(32);
+
+        $config = ['rootPass' => $password];
+
+        $this->dbService->build($output, $config);
+
+        return true;
+    }
+
+    protected function buildWebService(OutputInterface $output)
+    {
+        $vars = $this->dbService->getEnvVars();
+        if (!isset($vars['MYSQL_ROOT_PASSWORD'])) {
+            throw new RuntimeException('MYSQL_ROOT_PASSWORD is missing');
+        }
+
+        $config = [
+            'cliId' => $this->generator->generateString(6),
+            'hostPort' => (string) $this->generator->generateInt(8000, 8999),
+            'dbHost' => 'database',
+            'dbUser' => $this->getProject()->getName(),
+            'dbPassword' => $this->generator->generateString(32),
+            'dbPort' => 3306,
+            'dbName' => $this->getProject()->getName(),
+            'hostDir' => $this->getProject()->getRootDirectory(),
+        ];
+
+        $this->webService->build($output, $config);
+
+        return true;
+    }
+
     protected function getProject()
     {
         return $this->project;
+    }
+
+    private function ensureDatabaseExists(array $config)
+    {
+        $query = sprintf(
+            'CREATE DATABASE IF NOT EXISTS %s CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci',
+            $config['dbName']
+        );
+
+        $conn = $this->getDbConnection($config);
+        $result = $conn->query($query);
+
+        $query = sprintf(
+            "GRANT ALL PRIVILEGES ON %s.* to %s@'%%' IDENTIFIED BY %s",
+            $config['dbName'],
+            $conn->quote($config['dbUser']),
+            $conn->quote($config['dbPassword'])
+        );
+        $result = $conn->query($query);
+
+    }
+
+    /**
+     * Fetches the connection to the database instance. This has retry functionality
+     * as for some reason, the timeout for mysql connection is being ignored. When
+     * the DB instance spins up, it some times takes a while for MySQL to be ready
+     * so we should expect a few failures when trying to connect.
+     *
+     * @param array $config
+     * @param int $triesRemaining The number of times it will try to connect
+     *
+     * @return PDO
+     */
+    private function getDbConnection(array $config, $triesRemaining = 10)
+    {
+        try {
+            $options = [
+                PDO::ATTR_TIMEOUT => 120,
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+            ];
+
+            // Even though its throwing and exception, it also writes an error out
+            // to the console.
+            return @new PDO(
+                sprintf('mysql:host=0.0.0.0;port=%dcharset=utf8mb4', $config['dbPort']),
+                $config['dbRootUser'],
+                $config['dbRootPassword'],
+                $options
+            );
+        } catch (PDOException $e) {
+            if ($triesRemaining > 0) {
+                sleep(3);
+                return $this->getDbConnection($config, $triesRemaining - 1);
+            }
+
+            // We've exceeded are remaining tries
+            throw $e;
+        }
+    }
+
+    protected function displayWebsiteDetails(OutputInterface $output)
+    {
+        $env = $this->webService->getEnvVars();
+        $dotEnv = $this->getProject()->getDotEnv();
+
+        if (isset($dotEnv['SS_DEFAULT_ADMIN_USERNAME'], $dotEnv['SS_DEFAULT_ADMIN_PASSWORD'])) {
+            $adminUsername = $dotEnv['SS_DEFAULT_ADMIN_USERNAME'];
+            $adminPassword = $dotEnv['SS_DEFAULT_ADMIN_PASSWORD'];
+        } else {
+            $adminUsername = '<warning>No username</warning>';
+            $adminPassword = '<warning>No password</warning>';
+        }
+
+        $table = new Table($output);
+        $table->setHeaders([new TableCell('Website Access', ['colspan' => 2])]);
+        $table->setStyle('compact');
+        $table->setRows([
+            ['URL', sprintf('http://localhost:%d', $env['SSCLI_HOST_PORT'])],
+            ['Admin URL', sprintf('http://localhost:%d/admin', $env['SSCLI_HOST_PORT'])],
+            ['CMS Admin', $adminUsername],
+            ['CMS Password', $adminPassword],
+        ]);
+        $table->setColumnWidth(0, ceil(BaseCommand::COLUMN_LENGTH / 2));
+        $table->setColumnWidth(1, ceil(BaseCommand::COLUMN_LENGTH / 2));
+        $table->render();
+        $output->writeln('');
+    }
+
+    protected function displayDatabaseDetails(OutputInterface $output)
+    {
+        $env = $this->webService->getEnvVars();
+        $table = new Table($output);
+        $table->setHeaders([new TableCell('Database Access', ['colspan' => 2])]);
+        $table->setStyle('compact');
+        $table->setRows([
+            ['Database name', $env['SS_DATABASE_NAME']],
+            ['Username', $env['SS_DATABASE_USERNAME']],
+            ['Password', $env['SS_DATABASE_PASSWORD']],
+            ['Host', 'localhost'],
+            ['Port', '9000'],
+        ]);
+        $table->setColumnWidth(0, ceil(BaseCommand::COLUMN_LENGTH / 2));
+        $table->setColumnWidth(1, ceil(BaseCommand::COLUMN_LENGTH / 2));
+        $table->render();
+        $output->writeln('');
     }
 }

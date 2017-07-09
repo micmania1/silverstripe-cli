@@ -9,12 +9,7 @@ use Docker\API\Model\HostConfig;
 use Docker\Context\Context;
 use RandomLib\Factory;
 use SecurityLib\Strength;
-
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Helper\Table;
-use Symfony\Component\Console\Helper\TableCell;
-
-use micmania1\SilverStripeCli\Commands\BaseCommand;
 
 class WebService extends AbstractService
 {
@@ -25,21 +20,12 @@ class WebService extends AbstractService
         return 'sscli-web:' . self::MAJOR_VERSION;
     }
 
-    public function status(OutputInterface $output)
-    {
-        parent::status($output);
-
-        $output->emptyLine();
-
-        $this->displayDetails($output);
-    }
-
     public function start(OutputInterface $output, array $config = [])
     {
         parent::start($output, $config);
 
-        if (isset($config['databaseIp'])) {
-            $this->updateDatabaseIp($output, $config['databaseIp']);
+        if (isset($config['dbIp'])) {
+            $this->updateDatabaseIp($output, $config['dbIp']);
         }
     }
 
@@ -98,16 +84,17 @@ class WebService extends AbstractService
         $groupInfo = posix_getgrgid($gid);
         $groupName = $groupInfo = $groupInfo['name'];
 
-        $hostPort = $this->generateWebPort();
-
-        $randomId = $this->getRandomId();
         $containerConfig->setEnv([
-            sprintf('SSCLI_ID=%s', $randomId),
+            sprintf('SSCLI_ID=%s', $config['cliId']),
+            sprintf('SSCLI_HOST_PORT=%d', $config['hostPort']),
+
+            // Permission fixes
             sprintf('SSCLI_USERNAME=%s', $userName),
             sprintf('SSCLI_UID=%d', $uid),
             sprintf('SSCLI_GROUPNAME=%s', $groupName),
-            sprintf('SSCLI_HOST_PORT=%d', $hostPort),
             sprintf('SSCLI_GID=%d', $gid),
+
+            // SilverStripe stuff
             sprintf('SS_DATABASE_USERNAME=%s', $config['dbUser']),
             sprintf('SS_DATABASE_PASSWORD=%s', $config['dbPassword']),
             sprintf('SS_DATABASE_SERVER=%s', $config['dbHost']),
@@ -117,13 +104,13 @@ class WebService extends AbstractService
 
         // Map ports
         $portBinding = new PortBinding();
-        $portBinding->setHostPort($hostPort);
+        $portBinding->setHostPort($config['hostPort']);
         $portBinding->setHostIp('0.0.0.0');
         $map = new \ArrayObject();
         $map['80/tcp'] = [$portBinding];
 
         $hostConfig = new HostConfig();
-        $hostConfig->setBinds([$this->getProject()->getRootDirectory() . ':/var/www/mysite']);
+        $hostConfig->setBinds([$config['hostDir'] . ':/var/www/mysite']);
         $hostConfig->setPortBindings($map);
 
         $containerConfig->setHostConfig($hostConfig);
@@ -139,99 +126,4 @@ class WebService extends AbstractService
         $this->copyFixture('update-hosts', $buildDir);
     }
 
-    protected function generateDatabaseUser()
-    {
-        return $this->getProject()->getName();
-    }
-
-    protected function generateDatabasePassword()
-    {
-        $chars = 'abcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_1234567890';
-        return $this->getRandomGenerator()->generateString(32, $chars);
-    }
-
-    protected function getDatabaseHost()
-    {
-        return 'localhost';
-    }
-
-    protected function generateDatabaseName()
-    {
-        return $this->getProject()->getName();
-    }
-
-    /**
-     * This random id will be used by the container internally to ensure we
-     * don't get database name clashes and such.
-     *
-     * @return string
-     */
-    protected function getRandomId()
-    {
-        return $this->getRandomGenerator()->generateString(6, 'abcdef1234567890');
-    }
-
-    protected function getRandomGenerator()
-    {
-        $factory = new Factory;
-        return $factory->getGenerator(new Strength(Strength::MEDIUM));
-    }
-
-    protected function generateWebPort()
-    {
-        return (string) $this->getRandomGenerator()->generateInt(8000, 8999);
-    }
-
-    protected function displayDetails(OutputInterface $output)
-    {
-        $this->displayWebsiteDetails($output);
-        $this->displayDatabaseDetails($output);
-    }
-
-    protected function displayWebsiteDetails(OutputInterface $output)
-    {
-        $env = $this->getEnvVars();
-        $dotEnv = $this->getProject()->getDotEnv();
-
-        if (isset($dotEnv['SS_DEFAULT_ADMIN_USERNAME'], $dotEnv['SS_DEFAULT_ADMIN_PASSWORD'])) {
-            $adminUsername = $dotEnv['SS_DEFAULT_ADMIN_USERNAME'];
-            $adminPassword = $dotEnv['SS_DEFAULT_ADMIN_PASSWORD'];
-        } else {
-            $adminUsername = '<warning>No username</warning>';
-            $adminPassword = '<warning>No password</warning>';
-        }
-
-        $table = new Table($output);
-        $table->setHeaders([new TableCell('Website Access', ['colspan' => 2])]);
-        $table->setStyle('compact');
-        $table->setRows([
-            ['URL', sprintf('http://localhost:%d', $env['SSCLI_HOST_PORT'])],
-            ['Admin URL', sprintf('http://localhost:%d/admin', $env['SSCLI_HOST_PORT'])],
-            ['CMS Admin', $adminUsername],
-            ['CMS Password', $adminPassword],
-        ]);
-        $table->setColumnWidth(0, ceil(BaseCommand::COLUMN_LENGTH / 2));
-        $table->setColumnWidth(1, ceil(BaseCommand::COLUMN_LENGTH / 2));
-        $table->render();
-        $output->writeln('');
-    }
-
-    protected function displayDatabaseDetails(OutputInterface $output)
-    {
-        $env = $this->getEnvVars();
-        $table = new Table($output);
-        $table->setHeaders([new TableCell('Database Access', ['colspan' => 2])]);
-        $table->setStyle('compact');
-        $table->setRows([
-            ['Database name', $env['SS_DATABASE_NAME']],
-            ['Username', $env['SS_DATABASE_USERNAME']],
-            ['Password', $env['SS_DATABASE_PASSWORD']],
-            ['Host', 'localhost'],
-            ['Port', '9000'],
-        ]);
-        $table->setColumnWidth(0, ceil(BaseCommand::COLUMN_LENGTH / 2));
-        $table->setColumnWidth(1, ceil(BaseCommand::COLUMN_LENGTH / 2));
-        $table->render();
-        $output->writeln('');
-    }
 }

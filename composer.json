@@ -18,6 +18,7 @@
         "docker-php/docker-php": "^1.24",
         "ircmaxell/random-lib": "^1.2",
         "symfony/yaml": "^3.3",
-        "vlucas/phpdotenv": "^2.4"
+        "vlucas/phpdotenv": "^2.4",
+        "php-di/php-di": "^5.4"
     }
 }

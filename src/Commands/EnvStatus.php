@@ -19,23 +19,17 @@ class EnvStatus extends BaseCommand
      */
     protected $environment;
 
+    public function __construct(Environment $environment)
+    {
+        parent::__construct();
+
+        $this->environment = $environment;
+    }
+
     protected function configure()
     {
         $this->setName('env:status')
             ->setDescription('Show the environment status');
-    }
-
-    protected function initialize(InputInterface $input, OutputInterface $output)
-    {
-        parent::initialize($input, $output);
-
-        $project = new Project(getcwd());
-        if (!$project->isCli()) {
-            throw new \Exception('You must be in a SilverStripe Cli project to run this command');
-        }
-
-        $docker = new Docker();
-        $this->environment = new Environment($project, $docker);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)

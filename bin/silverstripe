@@ -3,50 +3,27 @@
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use Symfony\Component\Console\Application;
-use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Formatter\OutputFormatterStyle;
+use DI\ContainerBuilder;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+use micmania1\SilverStripeCli\Application;
 
-use micmania1\SilverStripeCli\Console\Output;
-
+// @todo these have been setup in container config, but need to be replaced
+// throughout the codebase
 define('ROOT_DIR', dirname(__DIR__));
 define('COMPOSER_BIN', ROOT_DIR . '/vendor/bin/composer');
 define('FIXTURES_DIR', ROOT_DIR . '/fixtures');
 define('CLI_ASSETS', ROOT_DIR . '/cli-assets');
 
-$application = new Application();
-$application->setName('SilverStripe Cli');
-$application->setVersion('0.1-experimental');
+// Build our container
+$builder = new DI\ContainerBuilder();
+$builder->addDefinitions(__DIR__ . '/../config/php-di.php');
+$container = $builder->build();
 
-// Register all of our commands
-$commands = glob(__DIR__ . '/../src/Commands/*.php');
-foreach($commands as $command) {
-	$pos = strrpos($command, DIRECTORY_SEPARATOR);
-	if(is_int($pos)) {
-		$pos++;
-	} else {
-		$pos = 0;
-	}
+// Setup input/output
+$input = $container->get(InputInterface::class);
+$output = $container->get(OutputInterface::class);
 
-	$namespace = '\\micmania1\\SilverStripeCli\\Commands\\';
-	$class = $namespace . substr($command, $pos, -4);
-	if(class_exists($class) && is_a($class, Command::class, true)) {
-
-		$cmd = new $class;
-		$application->add($cmd);
-
-		if($cmd->getName() == 'silverstripe') {
-			$application->setDefaultCommand($cmd->getName());
-		}
-	}
-}
-
-$output = new Output();
-
-$successStyle = new OutputFormatterStyle('white', 'green');
-$output->getFormatter()->setStyle('success', $successStyle);
-
-$warningStyle = new OutputFormatterStyle('yellow');
-$output->getFormatter()->setStyle('warning', $warningStyle);
-
-$application->run(null, $output);
+// Create and run the app
+$application = $container->get(Application::class);
+$application->run($input, $output);
