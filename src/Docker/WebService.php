@@ -7,8 +7,6 @@ use Docker\API\Model\ContainerConfig;
 use Docker\API\Model\PortBinding;
 use Docker\API\Model\HostConfig;
 use Docker\Context\Context;
-use RandomLib\Factory;
-use SecurityLib\Strength;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class WebService extends AbstractService

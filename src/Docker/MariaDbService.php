@@ -19,7 +19,7 @@ class MariaDbService extends AbstractService
 {
     public function getImageName()
     {
-        return 'sscli-db';
+        return 'sscli-db:1';
     }
 
     /**
@@ -28,7 +28,7 @@ class MariaDbService extends AbstractService
     protected function getImageBuilder($config = [])
     {
         $builder = new ContextBuilder();
-        $builder->from('mariadb:latest');
+        $builder->from('mariadb:10.1');
 
         return $builder;
     }
@@ -39,17 +39,22 @@ class MariaDbService extends AbstractService
             throw new RuntimeException('rootPass config missing');
         }
 
+        if (!isset($config['hostPort'])) {
+            throw new RuntimeException('hostPort config missing');
+        }
+
         $containerConfig = new ContainerConfig();
         $containerConfig->setImage($this->getImageName());
         $containerConfig->setTty(true);
         $containerConfig->setEnv([
+            sprintf('SSCLI_HOST_PORT=%d', $config['hostPort']),
             sprintf('MYSQL_ROOT_PASSWORD=%s', $config['rootPass']),
         ]);
         $containerConfig->setExposedPorts(['3306/tcp' => (object)[]]);
 
         // Map ports
         $portBinding = new PortBinding();
-        $portBinding->setHostPort('9000');
+        $portBinding->setHostPort($config['hostPort']);
         $portBinding->setHostIp('0.0.0.0');
         $map = new \ArrayObject();
         $map['3306/tcp'] = [$portBinding];

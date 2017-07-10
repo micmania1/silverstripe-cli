@@ -86,7 +86,7 @@ class Environment implements EnvironmentInterface
             'dbIp' => $this->dbService->getIp(),
             'dbRootUser' => 'root',
             'dbRootPassword' => $dbVars['MYSQL_ROOT_PASSWORD'],
-            'dbPort' => 9000,
+            'dbPort' => $dbVars['SSCLI_HOST_PORT'],
             'dbName' => $webVars['SS_DATABASE_NAME'],
             'dbUser' => $webVars['SS_DATABASE_USERNAME'],
             'dbPassword' => $webVars['SS_DATABASE_PASSWORD'],
@@ -119,7 +119,10 @@ class Environment implements EnvironmentInterface
     {
         $password = $this->generator->generateString(32);
 
-        $config = ['rootPass' => $password];
+        $config = [
+            'rootPass' => $password,
+            'hostPort' => (string) $this->generator->generateInt(9000, 9999),
+        ];
 
         $this->dbService->build($output, $config);
 
@@ -207,7 +210,7 @@ class Environment implements EnvironmentInterface
                 return $this->getDbConnection($config, $triesRemaining - 1);
             }
 
-            // We've exceeded are remaining tries
+            // We've exceeded our remaining tries
             throw $e;
         }
     }
@@ -237,12 +240,15 @@ class Environment implements EnvironmentInterface
         $table->setColumnWidth(0, ceil(BaseCommand::COLUMN_LENGTH / 2));
         $table->setColumnWidth(1, ceil(BaseCommand::COLUMN_LENGTH / 2));
         $table->render();
-        $output->writeln('');
+
+        $output->emptyLine();
     }
 
     protected function displayDatabaseDetails(OutputInterface $output)
     {
         $env = $this->webService->getEnvVars();
+        $dbEnv = $this->dbService->getEnvVars();
+
         $table = new Table($output);
         $table->setHeaders([new TableCell('Database Access', ['colspan' => 2])]);
         $table->setStyle('compact');
@@ -250,12 +256,13 @@ class Environment implements EnvironmentInterface
             ['Database name', $env['SS_DATABASE_NAME']],
             ['Username', $env['SS_DATABASE_USERNAME']],
             ['Password', $env['SS_DATABASE_PASSWORD']],
-            ['Host', 'localhost'],
-            ['Port', '9000'],
+            ['Host', '127.0.0.1'],
+            ['Port', $dbEnv['SSCLI_HOST_PORT']],
         ]);
         $table->setColumnWidth(0, ceil(BaseCommand::COLUMN_LENGTH / 2));
         $table->setColumnWidth(1, ceil(BaseCommand::COLUMN_LENGTH / 2));
         $table->render();
-        $output->writeln('');
+
+        $output->emptyLine();
     }
 }
