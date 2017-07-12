@@ -1,19 +1,26 @@
 #!/bin/bash
 
+CLI_USERNAME=$(echo $SSCLI_USERNAME | sed -e 's/[\/&]/\\&/g')
+DB_USERNAME=$(echo $SS_DATABASE_USERNAME | sed -e 's/[\/&]/\\&/g')
+DB_PASSWORD=$(echo $SS_DATABASE_PASSWORD | sed -e 's/[\/&]/\\&/g')
+DB_SERVER=$(echo $SS_DATABASE_SERVER | sed -e 's/[\/&]/\\&/g')
+DB_NAME=$(echo $SS_DATABASE_NAME | sed -e 's/[\/&]/\\&/g')
+DB_PORT=$(echo $SS_DATABASE_PORT | sed -e 's/[\/&]/\\&/g')
+
 groupadd -g "$SSCLI_GID" "$SSCLI_GROUPNAME"
 useradd -u "$SSCLI_UID" -g "$SSCLI_GROUPNAME" "$SSCLI_USERNAME"
 
-sed -i "s/www-data/$SSCLI_USERNAME/g" /etc/apache2/envvars
+sed -i "s/www-data/$CLI_USERNAME/g" /etc/apache2/envvars
 
-sed -i "s/{SS_DATABASE_USERNAME}/$SS_DATABASE_USERNAME/g" /etc/apache2/sites-available/mysite.conf
-sed -i "s/{SS_DATABASE_PASSWORD}/$SS_DATABASE_PASSWORD/g" /etc/apache2/sites-available/mysite.conf
-sed -i "s/{SS_DATABASE_SERVER}/$SS_DATABASE_SERVER/g" /etc/apache2/sites-available/mysite.conf
-sed -i "s/{SS_DATABASE_NAME}/$SS_DATABASE_NAME/g" /etc/apache2/sites-available/mysite.conf
-sed -i "s/{SS_DATABASE_PORT}/$SS_DATABASE_PORT/g" /etc/apache2/sites-available/mysite.conf
+sed -i "s/{SS_DATABASE_USERNAME}/$DB_USERNAME/g" /etc/apache2/sites-available/mysite.conf
+sed -i "s/{SS_DATABASE_PASSWORD}/$DB_PASSWORD/g" /etc/apache2/sites-available/mysite.conf
+sed -i "s/{SS_DATABASE_SERVER}/$DB_SERVER/g" /etc/apache2/sites-available/mysite.conf
+sed -i "s/{SS_DATABASE_NAME}/$DB_NAME/g" /etc/apache2/sites-available/mysite.conf
+sed -i "s/{SS_DATABASE_PORT}/$DB_PORT/g" /etc/apache2/sites-available/mysite.conf
 
 service apache2 start
 
-# WEB_DIR="/var/www/mysite/www"
-# su -c "php $WEB_DIR/framework/cli-script.php dev/build flush=1" "$SSCLI_USERNAME"
+WEB_DIR="/var/www/mysite/www"
+su -c "php $WEB_DIR/framework/cli-script.php dev/build flush=1" "$SSCLI_USERNAME"
 
 bash
