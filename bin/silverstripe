@@ -5,8 +5,8 @@ require __DIR__ . '/../vendor/autoload.php';
 
 use DI\ContainerBuilder;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
 use micmania1\SilverStripeCli\Application;
+use micmania1\SilverStripeCli\Console\OutputInterface;
 
 // @todo these have been setup in container config, but need to be replaced
 // throughout the codebase

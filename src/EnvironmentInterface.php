@@ -3,7 +3,7 @@
 namespace micmania1\SilverStripeCli;
 
 use Closure;
-use Symfony\Component\Console\Output\OutputInterface;
+use micmania1\SilverStripeCli\Console\OutputInterface;
 
 /**
  * An environment is our interface to backend infrastructure. An

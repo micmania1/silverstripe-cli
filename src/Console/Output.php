@@ -4,7 +4,7 @@ namespace micmania1\SilverStripeCli\Console;
 
 use Symfony\Component\Console\Output\ConsoleOutput;
 
-class Output extends ConsoleOutput
+class Output extends ConsoleOutput implements OutputInterface
 {
     /**
      * Clears the previously written line

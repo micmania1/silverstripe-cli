@@ -5,18 +5,14 @@ namespace micmania1\SilverStripeCli\Commands;
 use micmania1\SilverStripeCli\Helpers\ProcessSpinner;
 use micmania1\SilverStripeCli\Helpers\Spinner;
 use micmania1\SilverStripeCli\Model\Project;
-
+use micmania1\SilverStripeCli\Console\OutputInterface;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
-
 use Symfony\Component\Process\Process;
-
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
-
 use Cz\Git;
 
 class ProjectCreate extends BaseCommand

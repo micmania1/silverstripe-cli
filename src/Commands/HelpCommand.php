@@ -4,7 +4,7 @@ namespace micmania1\SilverStripeCli\Commands;
 
 use Symfony\Component\Console\Command\ListCommand;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
+use micmania1\SilverStripeCli\Console\OutputInterface;
 
 class HelpCommand extends ListCommand
 {

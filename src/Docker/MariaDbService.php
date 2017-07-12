@@ -7,13 +7,11 @@ use Docker\API\Model\ContainerConfig;
 use Docker\API\Model\PortBinding;
 use Docker\API\Model\HostConfig;
 use Docker\Context\Context;
-
-use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Helper\TableCell;
 use Symfony\Component\Console\Exception\RuntimeException;
-
 use micmania1\SilverStripeCli\Commands\BaseCommand;
+use micmania1\SilverStripeCli\Console\OutputInterface;
 
 class MariaDbService extends AbstractService
 {

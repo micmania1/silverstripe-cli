@@ -4,13 +4,13 @@ use RandomLib\Factory as GeneratorFactory;
 use RandomLib\Generator;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\ArgvInput;
-use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Psr\Container\ContainerInterface;
 
 use micmania1\SilverStripeCli\Application;
 use micmania1\SilverStripeCli\Model\Project;
 use micmania1\SilverStripeCli\Console\Output;
+use micmania1\SilverStripeCli\Console\OutputInterface;
 use micmania1\SilverStripeCli\Commands\EnvUp;
 use micmania1\SilverStripeCli\Commands\EnvDown;
 use micmania1\SilverStripeCli\Commands\EnvStatus;

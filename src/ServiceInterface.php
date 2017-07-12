@@ -2,7 +2,7 @@
 
 namespace micmania1\SilverStripeCli;
 
-use Symfony\Component\Console\Output\OutputInterface;
+use micmania1\SilverStripeCli\Console\OutputInterface;
 
 interface ServiceInterface
 {

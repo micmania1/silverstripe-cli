@@ -2,7 +2,7 @@
 
 namespace micmania1\SilverStripeCli\Commands;
 
-use Symfony\Component\Console\Output\OutputInterface;
+use micmania1\SilverStripeCli\Console\OutputInterface;
 
 trait CommandHeader
 {

@@ -7,7 +7,6 @@ use Exception;
 use PDO;
 use PDOException;
 use Symfony\Component\Filesystem\Filesystem;
-use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Exception\RuntimeException;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Helper\TableCell;
@@ -16,6 +15,7 @@ use micmania1\SilverStripeCli\ServiceInterface;
 use micmania1\SilverStripeCli\EnvironmentInterface;
 use micmania1\SilverStripeCli\Model\Project;
 use micmania1\SilverStripeCli\Commands\BaseCommand;
+use micmania1\SilverStripeCli\Console\OutputInterface;
 
 class Environment implements EnvironmentInterface
 {
@@ -157,7 +157,7 @@ class Environment implements EnvironmentInterface
         return $this->project;
     }
 
-    private function ensureDatabaseExists(array $config)
+    protected function ensureDatabaseExists(array $config)
     {
         $query = sprintf(
             'CREATE DATABASE IF NOT EXISTS %s CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci',
@@ -165,7 +165,9 @@ class Environment implements EnvironmentInterface
         );
 
         $conn = $this->getDbConnection($config);
-        $result = $conn->query($query);
+        if (!$conn->query($query)) {
+            throw new RuntimeException('Unable to create database.');
+        }
 
         $query = sprintf(
             "GRANT ALL PRIVILEGES ON %s.* to %s@'%%' IDENTIFIED BY %s",
@@ -173,7 +175,9 @@ class Environment implements EnvironmentInterface
             $conn->quote($config['dbUser']),
             $conn->quote($config['dbPassword'])
         );
-        $result = $conn->query($query);
+        if (!$conn->query($query)) {
+            throw new RuntimeException('Unable to create database user.');
+        }
     }
 
     /**
@@ -223,8 +227,8 @@ class Environment implements EnvironmentInterface
             $adminUsername = $dotEnv['SS_DEFAULT_ADMIN_USERNAME'];
             $adminPassword = $dotEnv['SS_DEFAULT_ADMIN_PASSWORD'];
         } else {
-            $adminUsername = '<warning>No username</warning>';
-            $adminPassword = '<warning>No password</warning>';
+            $adminUsername = '<warning>No default admin</warning>';
+            $adminPassword = '<warning>No default admin</warning>';
         }
 
         $table = new Table($output);

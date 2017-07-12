@@ -7,7 +7,7 @@ use Docker\API\Model\ContainerConfig;
 use Docker\API\Model\PortBinding;
 use Docker\API\Model\HostConfig;
 use Docker\Context\Context;
-use Symfony\Component\Console\Output\OutputInterface;
+use micmania1\SilverStripeCli\Console\OutputInterface;
 
 class WebService extends AbstractService
 {
