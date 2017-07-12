@@ -174,7 +174,6 @@ class Environment implements EnvironmentInterface
             $conn->quote($config['dbPassword'])
         );
         $result = $conn->query($query);
-
     }
 
     /**

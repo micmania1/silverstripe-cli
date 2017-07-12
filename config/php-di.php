@@ -56,12 +56,12 @@ return [
     'app.assets' => $assetsDir,
     'composer.bin' => $composerBin,
 
-    Generator::class => function() {
+    Generator::class => function () {
         return (new GeneratorFactory())
             ->getMediumStrengthGenerator();
     },
 
-    Application::class => function(ContainerInterface $container) {
+    Application::class => function (ContainerInterface $container) {
         $application = new Application(DI\get(Generator::class));
 
         $application->setName(DI\get('app.name'));
@@ -91,7 +91,7 @@ return [
         return $application;
     },
 
-    OutputInterface::class => function(ContainerInterface $container) {
+    OutputInterface::class => function (ContainerInterface $container) {
         $output = $container->get(Output::class);
 
         $successStyle = new OutputFormatterStyle('white', 'green');
@@ -103,21 +103,21 @@ return [
         return $output;
     },
 
-    InputInterface::class => function(ContainerInterface $container) {
+    InputInterface::class => function (ContainerInterface $container) {
         return $container->get(ArgvInput::class);
     },
 
-    Project::class => function(ContainerInterface $container) {
+    Project::class => function (ContainerInterface $container) {
         return new Project($container->get('app.root'));
     },
 
     Docker::class => DI\object(),
 
-    MariaDbService::class => function(ContainerInterface $container) {
+    MariaDbService::class => function (ContainerInterface $container) {
         return new MariaDbService('database-shared', $container->get(Docker::class));
     },
 
-    WebService::class => function(ContainerInterface $container) {
+    WebService::class => function (ContainerInterface $container) {
         $project = $container->get(Project::class);
         $name = $project->getName() . '-web';
         return new WebService($name, $container->get(Docker::class));

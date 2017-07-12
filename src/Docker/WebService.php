@@ -123,5 +123,4 @@ class WebService extends AbstractService
         $this->copyFixture('docker-startup', $buildDir);
         $this->copyFixture('update-hosts', $buildDir);
     }
-
 }
