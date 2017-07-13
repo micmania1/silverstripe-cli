@@ -3,54 +3,70 @@
 namespace micmania1\SilverStripeCli;
 
 use Closure;
+use Symfony\Component\Console\Input\InputInterface;
 use micmania1\SilverStripeCli\Console\OutputInterface;
 
 /**
- * An environment is our interface to backend infrastructure. An
- * environment may represent a single service (ie. vagrant LAMP stack)
- * or may compose of multiple services (ie. Docker; web, db etc)
+ * When we talk about an Environment in SilverStripe CLI, we're talking about
+ * whatever is behind running the website. This could be docker, vagrant or some
+ * other tool. Even if multiple services make up the stack, we refer to this
+ * simply as 'Environment'
  */
 interface EnvironmentInterface
 {
     /**
-     * This will build the initial environment
+     * This will build the initial environment.
+     *
+     * @param OutputInterface $output
+     *
+     * @return boolean
      */
     public function build(OutputInterface $output);
 
     /**
      * This will give the status of the current environment
      *
-     * @return array
+     * @param OutputInterface $output
+     *
+     * @return boolean
      */
     public function status(OutputInterface $output);
 
     /**
      * This will launch the current environment
      *
-     * @return array
+     * @param OutputInterface $output
+     *
+     * @return boolean
      */
     public function start(OutputInterface $output);
 
     /**
      * This will stop the current environment
      *
-     * @return array
+     * @param OutputInterface $output
+     *
+     * @return boolean
      */
     public function stop(OutputInterface $output);
 
     /**
      * This will export an sspak out of the current environment
      *
-     * @return string file path to sspak file
+     * @param OutputInterface $output
+     * @param string $outputFile
+     *
+     * @return boolean
      */
-    public function export();
+    public function export(OutputInterface $output, $outputFile);
 
     /**
      * This will import an sspak into the current environment
      *
-     * @param file path to sspak file
+     * @param OutputInterface $output
+     * @param string $inputFile
      *
      * @return boolean
      */
-    public function import($file);
+    public function import(OutputInterface $output, $outputFile);
 }

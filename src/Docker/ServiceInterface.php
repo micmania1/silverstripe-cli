@@ -1,6 +1,6 @@
 <?php
 
-namespace micmania1\SilverStripeCli;
+namespace micmania1\SilverStripeCli\Docker;
 
 use micmania1\SilverStripeCli\Console\OutputInterface;
 

@@ -20,10 +20,6 @@ use micmania1\SilverStripeCli\Commands\GenerateTheme;
 use micmania1\SilverStripeCli\Commands\GeneratePage;
 use micmania1\SilverStripeCli\Commands\HelpCommand;
 use micmania1\SilverStripeCli\Commands\ProjectCreate;
-use micmania1\SilverStripeCli\Commands\TestE2e;
-use micmania1\SilverStripeCli\Commands\TestJavascriptUnit;
-use micmania1\SilverStripeCli\Commands\TestPhpSpec;
-use micmania1\SilverStripeCli\Commands\TestPhpUnit;
 
 // Docker
 use Docker\Docker;
@@ -79,11 +75,6 @@ return [
         $application->add($container->get(GenerateModule::class));
         $application->add($container->get(GeneratePage::class));
         $application->add($container->get(GenerateTheme::class));
-
-        $application->add($container->get(TestE2e::class));
-        $application->add($container->get(TestJavascriptUnit::class));
-        $application->add($container->get(TestPhpSpec::class));
-        $application->add($container->get(TestPhpUnit::class));
 
         // Set default command
         $application->setDefaultCommand('silverstripe');

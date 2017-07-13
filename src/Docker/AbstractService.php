@@ -13,7 +13,7 @@ use Docker\Context\Context;
 use Docker\API\Model\ExecConfig;
 use Docker\API\Model\ExecStartConfig;
 use Symfony\Component\Console\Exception\RuntimeException;
-use micmania1\SilverStripeCli\ServiceInterface;
+use micmania1\SilverStripeCli\Docker\ServiceInterface;
 use micmania1\SilverStripeCli\Console\OutputInterface;
 use micmania1\SilverStripeCli\Helpers\Spinner;
 use micmania1\SilverStripeCli\Model\Project;

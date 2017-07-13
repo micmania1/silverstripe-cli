@@ -7,7 +7,6 @@ use Docker\Docker;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use micmania1\SilverStripeCli\Console\OutputInterface;
-use micmania1\SilverStripeCli\ServiceInterface;
 use micmania1\SilverStripeCli\Model\Project;
 use micmania1\SilverStripeCli\Docker\Environment;
 

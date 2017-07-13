@@ -3,7 +3,6 @@
 namespace micmania1\SilverStripeCli\Docker;
 
 use Closure;
-use Exception;
 use PDO;
 use PDOException;
 use Symfony\Component\Filesystem\Filesystem;
@@ -11,7 +10,7 @@ use Symfony\Component\Console\Exception\RuntimeException;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Helper\TableCell;
 use RandomLib\Generator;
-use micmania1\SilverStripeCli\ServiceInterface;
+use micmania1\SilverStripeCli\Docker\ServiceInterface;
 use micmania1\SilverStripeCli\EnvironmentInterface;
 use micmania1\SilverStripeCli\Model\Project;
 use micmania1\SilverStripeCli\Commands\BaseCommand;
@@ -41,6 +40,9 @@ class Environment implements EnvironmentInterface
 
     /**
      * @param Project $project
+     * @param Generator $generator
+     * @param MariaDbService $dbService
+     * @param WebService $webService
      */
     public function __construct(
         Project $project,
@@ -55,7 +57,7 @@ class Environment implements EnvironmentInterface
     }
 
     /**
-     * Builds our base docker image (or images)
+     * {@inheritdoc}
      */
     public function build(OutputInterface $output)
     {
@@ -63,6 +65,9 @@ class Environment implements EnvironmentInterface
             && $this->buildWebService($output);
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function status(OutputInterface $output)
     {
         $this->dbService->status($output);
@@ -74,6 +79,9 @@ class Environment implements EnvironmentInterface
         $this->displayDatabaseDetails($output);
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function start(OutputInterface $output)
     {
         // We need to start the db in order to obtain an ip address
@@ -99,22 +107,38 @@ class Environment implements EnvironmentInterface
         $this->webService->start($output, $config);
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function stop(OutputInterface $output)
     {
         $this->dbService->stop($output);
         $this->webService->stop($output);
     }
 
-    public function export()
+    /**
+     * {@inheritdoc}
+     */
+    public function export(OutputInterface $output, $outputFile)
     {
-        throw new Exception('Not implemented');
+        throw new RuntimeException('Not implemented');
     }
 
-    public function import($file)
+    /**
+     * {@inheritdoc}
+     */
+    public function import(OutputInterface $output, $inputFile)
     {
-        throw new Exception('Not implemented');
+        throw new RuntimeException('Not implemented');
     }
 
+    /**
+     * Responsible for creating config for the database service and building it
+     *
+     * @param OutputInterface $output
+     *
+     * @return boolean
+     */
     protected function buildDatabaseService(OutputInterface $output)
     {
         $password = $this->generator->generateString(32);
@@ -124,43 +148,50 @@ class Environment implements EnvironmentInterface
             'hostPort' => (string) $this->generator->generateInt(9000, 9999),
         ];
 
+        // @todo check returns value so we can say whether the service has been built
         $this->dbService->build($output, $config);
 
         return true;
     }
 
+    /**
+     * Responsible for creating config for the database service and building it
+     *
+     * @param OutputInterface $output
+     *
+     * @return boolean
+     */
     protected function buildWebService(OutputInterface $output)
     {
-        $vars = $this->dbService->getEnvVars();
-        if (!isset($vars['MYSQL_ROOT_PASSWORD'])) {
-            throw new RuntimeException('MYSQL_ROOT_PASSWORD is missing');
-        }
-
         $config = [
             'cliId' => $this->generator->generateString(6),
             'hostPort' => (string) $this->generator->generateInt(8000, 8999),
             'dbHost' => 'database',
-            'dbUser' => $this->getProject()->getName(),
+            'dbUser' => $this->project->getName(),
             'dbPassword' => $this->generator->generateString(32),
             'dbPort' => 3306,
-            'dbName' => $this->getProject()->getName(),
-            'hostDir' => $this->getProject()->getRootDirectory(),
+            'dbName' => $this->project->getName(),
+            'hostDir' => $this->project->getRootDirectory(),
         ];
 
+        // @todo check returns value so we can say whether the service has been built
         $this->webService->build($output, $config);
 
         return true;
     }
 
-    protected function getProject()
-    {
-        return $this->project;
-    }
-
+    /**
+     * This ensures the database exists with the web instances user
+     *
+     * @param array $config
+     *
+     * @throws RuntimeException
+     */
     protected function ensureDatabaseExists(array $config)
     {
         $query = sprintf(
-            'CREATE DATABASE IF NOT EXISTS %s CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci',
+            'CREATE DATABASE IF NOT EXISTS %s CHARACTER SET utf8mb4 '
+                . 'COLLATE utf8mb4_unicode_ci',
             $config['dbName']
         );
 
@@ -218,10 +249,15 @@ class Environment implements EnvironmentInterface
         }
     }
 
+    /**
+     * Displays details for the web service including url and default cms admin
+     *
+     * @param OutputInterface $output
+     */
     protected function displayWebsiteDetails(OutputInterface $output)
     {
         $env = $this->webService->getEnvVars();
-        $dotEnv = $this->getProject()->getDotEnv();
+        $dotEnv = $this->project->getDotEnv();
 
         if (isset($dotEnv['SS_DEFAULT_ADMIN_USERNAME'], $dotEnv['SS_DEFAULT_ADMIN_PASSWORD'])) {
             $adminUsername = $dotEnv['SS_DEFAULT_ADMIN_USERNAME'];
@@ -247,6 +283,11 @@ class Environment implements EnvironmentInterface
         $output->emptyLine();
     }
 
+    /**
+     * Displays details for the database service
+     *
+     * @param OutputInterface $output
+     */
     protected function displayDatabaseDetails(OutputInterface $output)
     {
         $env = $this->webService->getEnvVars();
