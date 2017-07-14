@@ -65,103 +65,86 @@ abstract class AbstractService implements ServiceInterface
         $this->docker = $docker;
     }
 
-    public function build(OutputInterface $output, $config = [])
+    /**
+     * {@inheritdoc}
+     */
+    public function imageExists()
+    {
+        try {
+            $image = $this->getImageManager()->find($this->getImageName());
+
+            return $image instanceof Image;
+        } catch (ClientErrorException $e) {
+            return false;
+        }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function containerExists()
+    {
+        return $this->getContainer() instanceof Container;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function build(OutputInterface $output, array $config = [])
     {
         if (!$this->imageExists()) {
             $this->buildImage($output, $config);
         }
 
-        if (!$this->containerExists() && $this->imageExists()) {
+        if (!$this->containerExists()) {
             $this->buildContainer($output, $config);
         }
 
         return $this->containerExists();
     }
 
-    public function exists()
+    public function isRunning(OutputInterface $output)
     {
-        return $this->imageExists() && $this->containerExists();
-    }
-
-    public function status(OutputInterface $output)
-    {
-        $container = $this->getContainerManager()->find($this->getName());
+        $container = $this->getContainer();
         if (!$container) {
-            $output->emptyLine();
-            $output->writeln(' The environment is not ready. Run env:up');
-            $output->emptyLine();
-            return;
+            return false;
         }
 
         $state = $container->getState();
 
-        if ($state->getPaused()) {
-            $status = ServiceInterface::STATUS_PAUSED;
-            $type = 'warning';
-        } elseif ($state->getRestarting()) {
-            $status = ServiceInterface::STATUS_RESTARTING;
-            $type = 'warning';
-        } elseif ($state->getRunning()) {
-            $status = ServiceInterface::STATUS_RUNNING;
-            $type = 'success';
-        } else {
-            $status = ServiceInterface::STATUS_STOPPED;
-            $type = 'error';
-        }
-
-        $message = sprintf('%s status', ltrim($container->getName(), '/'));
-        $output->writeStatus($message, $status, $type);
-        $output->emptyLine();
+        return $state->getRunning();
     }
 
     public function start(OutputInterface $output, array $config = [])
     {
-        $output->writeStatus(sprintf('Starting environment %s', $this->getName()));
         try {
-            $response = $this->getContainerManager()->start($this->getName());
+            $this->getContainerManager()->start($this->getName());
 
-            $output->clearLine();
-            $output->writeStatus(
-                sprintf('Starting environment %s', $this->getName()),
-                'OK',
-                'success'
-            );
-            $output->emptyLine();
+            return true;
         } catch (ClientErrorException $e) {
-            $output->clearLine();
-            $output->writeStatus(
-                sprintf('Starting environment %s', $this->getName()),
-                'FAIL',
-                'error'
-            );
-            $output->emptyLine();
-
-            throw $e;
+            return false;
         }
     }
 
     public function stop(OutputInterface $output)
     {
-        $message = sprintf('Stopping environment %s', $this->getName());
-        $output->writeStatus($message);
         try {
             $this->getContainerManager()->stop($this->getName());
 
-            $output->clearLine();
-            $output->writeStatus($message, 'OK', 'success');
-            $output->emptyLine();
+            return true;
         } catch (ClientErrorException $e) {
-            $output->clearLine();
-            $output->writeStatus($message, 'FAIL', 'error');
-            $output->emptyLine();
-
-            throw $e;
+            return false;
         }
     }
 
-    public function destroy()
+    public function destroyContainer(OutputInterface $output)
     {
         $this->getContainerManager()->remove($this->getName());
+    }
+
+    public function removeImage(OutputInterface $output)
+    {
+        $this->getImageManager()->remove($this->getImageName());
     }
 
     public function import()
@@ -230,6 +213,8 @@ abstract class AbstractService implements ServiceInterface
         $startConfig = new ExecStartConfig();
         $startConfig->setDetach(true);
         $execManager->start($response->getId(), $startConfig);
+
+        return true;
     }
 
     protected function buildImage(OutputInterface $output, $config = [])
@@ -330,32 +315,6 @@ abstract class AbstractService implements ServiceInterface
     protected function getContainerManager()
     {
         return $this->docker->getContainerManager();
-    }
-
-    /**
-     * Checks if the docker image exists
-     *
-     * @return boolean
-     */
-    protected function imageExists()
-    {
-        try {
-            $image = $this->getImageManager()->find($this->getImageName());
-
-            return $image instanceof Image;
-        } catch (ClientErrorException $e) {
-            return false;
-        }
-    }
-
-    /**
-     * Checks if the docker container exists
-     *
-     * @return boolean
-     */
-    protected function containerExists()
-    {
-        return $this->getContainer() instanceof Container;
     }
 
     /**

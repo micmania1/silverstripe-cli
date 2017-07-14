@@ -20,17 +20,19 @@ class WebService extends AbstractService
 
     public function start(OutputInterface $output, array $config = [])
     {
-        parent::start($output, $config);
+        $started = parent::start($output, $config);
 
         if (isset($config['dbIp'])) {
-            $this->updateDatabaseIp($output, $config['dbIp']);
+            return $this->updateDatabaseIp($output, $config['dbIp']) && $started;
         }
+
+        return $started;
     }
 
     protected function updateDatabaseIp(OutputInterface $output, $ip)
     {
         $command = sprintf('/opt/update-hosts %s database', $ip);
-        $this->exec($output, $command);
+        return $this->exec($output, $command);
     }
 
     protected function getImageBuilder($config = [])

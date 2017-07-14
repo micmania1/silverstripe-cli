@@ -70,9 +70,16 @@ class Environment implements EnvironmentInterface
      */
     public function status(OutputInterface $output)
     {
-        $this->dbService->status($output);
-        $this->webService->status($output);
+        $dbIsRunning = $this->dbService->isRunning($output);
+        $webIsRunning = $this->webService->isRunning($output);
 
+        $message = 'Environment status';
+        if ($dbIsRunning && $webIsRunning) {
+            $output->writeStatus($message, 'RUNNING', 'success');
+        } else {
+            $output->writeStatus($message, 'STOPPED', 'warning');
+        }
+        $output->emptyLine();
         $output->emptyLine();
 
         $this->displayWebsiteDetails($output);
@@ -84,8 +91,42 @@ class Environment implements EnvironmentInterface
      */
     public function start(OutputInterface $output)
     {
+        $output->writeStatus(sprintf(
+            'Starting environment %s',
+            $this->project->getName()
+        ));
+
+
+        $dbRunning = $this->dbService->isRunning($output);
+        $webRunning = $this->webService->isRunning($output);
+
+        if($dbRunning && $webRunning) {
+            $output->clearLine();
+            $output->writeStatus(
+                sprintf('Starting environment %s', $this->project->getName()),
+                'ALREADY RUNNING',
+                'warning'
+            );
+            $output->emptyLine();
+            $output->emptyLine();
+
+            return true;
+        }
+
         // We need to start the db in order to obtain an ip address
-        $this->dbService->start($output);
+        if (!$dbRunning && !$this->dbService->start($output)) {
+            $output->clearLine();
+            $output->writeStatus(
+                sprintf('Starting environment %s', $this->project->getName()),
+                'FAIL',
+                'error'
+            );
+            $output->emptyLine();
+            $output->emptyLine();
+
+            $output->writeln('ohh');
+            return false;
+        }
 
         $dbVars = $this->dbService->getEnvVars();
         $webVars = $this->webService->getEnvVars();
@@ -104,7 +145,30 @@ class Environment implements EnvironmentInterface
         $this->ensureDatabaseExists($config);
 
         // Start the web service
-        $this->webService->start($output, $config);
+        if ($this->webService->start($output, $config)) {
+            $output->clearLine();
+            $output->writeStatus(
+                sprintf('Starting environment %s', $this->project->getName()),
+                'OK',
+                'success'
+            );
+            $output->emptyLine();
+            $output->emptyLine();
+
+            return true;
+        }
+        $output->writeln('ohh');
+
+        $output->clearLine();
+        $output->writeStatus(
+            sprintf('Starting environment %s', $this->project->getName()),
+            'FAIL',
+            'error'
+        );
+        $output->emptyLine();
+        $output->emptyLine();
+
+        return false;
     }
 
     /**
@@ -112,8 +176,25 @@ class Environment implements EnvironmentInterface
      */
     public function stop(OutputInterface $output)
     {
-        $this->dbService->stop($output);
-        $this->webService->stop($output);
+        $message = sprintf('Stopping environment %s', $this->project->getName());
+        $output->writeStatus($message);
+
+        $dbStop = $this->dbService->stop($output);
+        $webStop = $this->webService->stop($output);
+
+        $output->clearLine();
+
+        if ($webStop && $dbStop) {
+            $output->writeStatus($message, 'STOPPED', 'info');
+            $output->emptyLine();
+
+            return true;
+        }
+
+        $output->writeStatus($message, 'FAIL', 'error');
+        $output->emptyLine();
+
+        return false;
     }
 
     /**
