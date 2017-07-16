@@ -13,6 +13,7 @@ use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
+use Symfony\Component\Console\Exception\RuntimeException;
 use Cz\Git;
 
 class ProjectCreate extends BaseCommand
@@ -37,6 +38,33 @@ class ProjectCreate extends BaseCommand
      */
     protected $project;
 
+    /**
+     * @var Filesystem
+     */
+    protected $filesyste;
+
+    /**
+     * The current working directory for this command to work from
+     *
+     * @var string $cwd
+     */
+    protected $cwd;
+
+    /**
+     * @param Filesystem $filesystem
+     * @param string $cwd
+     */
+    public function __construct(Filesystem $filesystem, $cwd)
+    {
+        parent::__construct();
+
+        $this->filesystem = $filesystem;
+        $this->cwd = $cwd;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     protected function configure()
     {
         // Set name and descriptions
@@ -91,14 +119,12 @@ class ProjectCreate extends BaseCommand
             $this->setSilverStripeVersion($version);
         }
 
-        $filesystem = new Filesystem();
-
         $directory = $input->getArgument('directory');
-        if (!$filesystem->isAbsolutePath($directory)) {
-            $directory = getcwd() . DIRECTORY_SEPARATOR . $directory;
+        if (!$this->filesystem->isAbsolutePath($directory)) {
+            $directory = $this->cwd . DIRECTORY_SEPARATOR . $directory;
         }
+        $directory = $this->filesystem->makePathRelative($directory, $this->cwd);
 
-        $directory = $filesystem->makePathRelative($directory, getcwd());
         $this->project = new Project($directory);
     }
 
@@ -107,10 +133,8 @@ class ProjectCreate extends BaseCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        if ($this->isForced()) {
-            if (!$this->removeExistingProject($input, $output)) {
-                return;
-            }
+        if ($this->isForced() && !$this->removeExistingProject($input, $output)) {
+            return;
         }
 
         $this->runComposer($output);
@@ -128,7 +152,7 @@ class ProjectCreate extends BaseCommand
         }
 
         $output->emptyLine();
-        $output->writeln(" <success>Project created</success> \xF0\x9F\x8D\xBA");
+        $output->writeln(" <info>Project created</info> \xF0\x9F\x8D\xBA");
         $output->emptyLine();
     }
 
@@ -211,9 +235,8 @@ class ProjectCreate extends BaseCommand
         );
         $spinner = new Spinner($output, $message);
 
-        $filesystem = new Filesystem();
         try {
-            $filesystem->remove($project->getRootDirectory());
+            $this->filesystem->remove($project->getRootDirectory());
             $status = 'OK';
             $type = 'success';
             $spinner->run($status, $type);

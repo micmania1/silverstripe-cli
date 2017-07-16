@@ -11,13 +11,22 @@ use micmania1\SilverStripeCli\Console\OutputInterface;
 
 class WebService extends AbstractService
 {
+    /**
+     * @const string
+     */
     const MAJOR_VERSION = 1;
 
+    /**
+     * {@inheritdoc}
+     */
     public function getImageName()
     {
         return 'sscli-web:' . self::MAJOR_VERSION;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function start(OutputInterface $output, array $config = [])
     {
         $started = parent::start($output, $config);
@@ -29,13 +38,30 @@ class WebService extends AbstractService
         return $started;
     }
 
+    /**
+     * Updates the /etc/hosts file on the web instance to ensure the database
+     * ip is current.
+     *
+     * eg. 172.0.0.2    database
+     *
+     * @param OutputInterface $output
+     * @param string $ip
+     *
+     * @return boolean
+     */
     protected function updateDatabaseIp(OutputInterface $output, $ip)
     {
         $command = sprintf('/opt/update-hosts %s database', $ip);
-        return $this->exec($output, $command);
+
+        $this->exec($output, $command);
+
+        return true;
     }
 
-    protected function getImageBuilder($config = [])
+    /**
+     * {@inheritdoc}
+     */
+    protected function getImageBuilder(array $config = [])
     {
         $builder = new ContextBuilder();
         $builder->from('debian:stretch-slim');
@@ -43,9 +69,6 @@ class WebService extends AbstractService
         // Install, Apache, PHP
         $builder->run('apt-get update -qq');
         $builder->run('apt-get install -qqy apache2 libapache2-mod-php php-cli php-common php-tidy php-gd php-intl php-apcu php-curl php-xdebug php-mcrypt php-mysql php-mbstring php-dom');
-
-        // Install other useful stuff
-        $builder->run('apt-get install -qqy vim lynx git-core');
 
         // Configure PHP
         $builder->run('sed -i \'s/;date.timezone =/date.timezone = Pacific\/Auckland/\' /etc/php/7.0/apache2/php.ini');
@@ -67,7 +90,10 @@ class WebService extends AbstractService
         return $builder;
     }
 
-    protected function getContainerConfig($config = [])
+    /**
+     * {@inheritdoc}
+     */
+    protected function getContainerConfig(array $config = [])
     {
         $containerConfig = new ContainerConfig();
         $containerConfig->setImage($this->getImageName());
@@ -118,6 +144,9 @@ class WebService extends AbstractService
         return $containerConfig;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     protected function copyFixtures(Context $context)
     {
         $buildDir = $context->getDirectory() . DIRECTORY_SEPARATOR;

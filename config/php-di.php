@@ -1,10 +1,14 @@
 <?php
 
+use function DI\object;
+use function DI\get;
+
 use RandomLib\Factory as GeneratorFactory;
 use RandomLib\Generator;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
+use Symfony\Component\Filesystem\Filesystem;
 use Psr\Container\ContainerInterface;
 
 use micmania1\SilverStripeCli\Application;
@@ -47,10 +51,22 @@ $assetsDir = implode(DIRECTORY_SEPARATOR, [
 return [
     'app.name' => 'SilverStripe Cli',
     'app.version' => '0.1-experimental',
+    'app.dbName' => 'database-shared',
     'app.root' => getcwd(),
-    'app.fixtures' => $fixturesDir,
-    'app.assets' => $assetsDir,
-    'composer.bin' => $composerBin,
+    'app.fixtures' => function (ContainerInterface $container) {
+        return $container->get('app.root') . DIRECTORY_SEPARATOR . 'fixtures';
+    },
+    'app.assets' => function (ContainerInterface $container) {
+        return $container->get('app.root') . DIRECTORY_SEPARATOR . 'cli-assets';
+    },
+    'composer.bin' => function (ContainerInterface $container) {
+        return implode(DIRECTORY_SEPARATOR, [
+            $container->get('app.root'),
+            'vendor',
+            'bin',
+            'composer',
+        ]);
+    },
 
     Generator::class => function () {
         return (new GeneratorFactory())
@@ -58,10 +74,10 @@ return [
     },
 
     Application::class => function (ContainerInterface $container) {
-        $application = new Application(DI\get(Generator::class));
+        $application = new Application(get(Generator::class));
 
-        $application->setName(DI\get('app.name'));
-        $application->setVersion(DI\get('app.version'));
+        $application->setName($container->get('app.name'));
+        $application->setVersion($container->get('app.version'));
 
         // Add all commands
         $application->add($container->get(ProjectCreate::class));
@@ -98,20 +114,19 @@ return [
         return $container->get(ArgvInput::class);
     },
 
-    Project::class => function (ContainerInterface $container) {
-        return new Project($container->get('app.root'));
-    },
+    ProjectCreate::class => object()
+        ->constructor(get(Filesystem::class), get('app.root')),
 
-    Docker::class => DI\object(),
+    Project::class => object()
+        ->constructor(get('app.root')),
 
-    MariaDbService::class => function (ContainerInterface $container) {
-        return new MariaDbService('database-shared', $container->get(Docker::class));
-    },
+    MariaDbService::class => object()
+        ->constructor(get('app.dbName'), get(Docker::class)),
 
     WebService::class => function (ContainerInterface $container) {
         $project = $container->get(Project::class);
         $name = $project->getName() . '-web';
-        return new WebService($name, $container->get(Docker::class));
-    }
 
+        return new WebService($name, $container->get(Docker::class));
+    },
 ];

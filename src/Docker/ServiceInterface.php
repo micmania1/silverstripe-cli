@@ -117,4 +117,20 @@ interface ServiceInterface
      * Export the service
      */
     public function export();
+
+    /**
+     * Return the ip of a running instance
+     *
+     * @return string
+     *
+     * @throws RuntimeException if unable to obtain ip
+     */
+    public function getIp();
+
+    /**
+     * Returns an array of docker environmental variables
+     *
+     * @return string[]
+     */
+    public function getEnvVars();
 }

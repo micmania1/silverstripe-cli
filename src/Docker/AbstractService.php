@@ -4,14 +4,14 @@ namespace micmania1\SilverStripeCli\Docker;
 
 use Http\Client\Common\Exception\ClientErrorException;
 use Docker\Docker;
-use Docker\API\Model\Buildsuccess;
 use Docker\API\Model\Container;
 use Docker\API\Model\Image;
-use Docker\Manager\ContainerManager;
 use Docker\Manager\ImageManager;
+use Docker\Manager\ContainerManager;
 use Docker\Context\Context;
 use Docker\API\Model\ExecConfig;
 use Docker\API\Model\ExecStartConfig;
+use Docker\API\Model\BuildInfo;
 use Symfony\Component\Console\Exception\RuntimeException;
 use micmania1\SilverStripeCli\Docker\ServiceInterface;
 use micmania1\SilverStripeCli\Console\OutputInterface;
@@ -36,24 +36,23 @@ abstract class AbstractService implements ServiceInterface
     protected $docker;
 
     /**
+     * @param array $config
+     *
      * @return Docker\Context\ContextBuilder|null
      */
-    abstract protected function getImageBuilder($config = []);
+    abstract protected function getImageBuilder(array $config = []);
 
     /**
+     * @param array $config
+     *
      * @return Docker\Manager\ContainerConfig
      */
-    abstract protected function getContainerConfig($config = []);
+    abstract protected function getContainerConfig(array $config = []);
 
     /**
      * @return string
      */
     abstract protected function getImageName();
-
-    /**
-     * @param Context $context
-     */
-    abstract protected function copyFixtures(Context $context);
 
     /**
      * @param string $name
@@ -70,13 +69,7 @@ abstract class AbstractService implements ServiceInterface
      */
     public function imageExists()
     {
-        try {
-            $image = $this->getImageManager()->find($this->getImageName());
-
-            return $image instanceof Image;
-        } catch (ClientErrorException $e) {
-            return false;
-        }
+        return $this->getImage() instanceof Image;
     }
 
     /**
@@ -92,17 +85,24 @@ abstract class AbstractService implements ServiceInterface
      */
     public function build(OutputInterface $output, array $config = [])
     {
-        if (!$this->imageExists()) {
-            $this->buildImage($output, $config);
+        if (!$this->imageExists() && !$this->buildImage($output, $config)) {
+            // throw new RuntimeException('Unable to build image');
+
+            return false;
         }
 
-        if (!$this->containerExists()) {
-            $this->buildContainer($output, $config);
+        if (!$this->containerExists() && !$this->buildContainer($output, $config)) {
+            // throw new RuntimeException('Unable to build container');
+
+            return false;
         }
 
-        return $this->containerExists();
+        return true;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function isRunning(OutputInterface $output)
     {
         $container = $this->getContainer();
@@ -115,6 +115,9 @@ abstract class AbstractService implements ServiceInterface
         return $state->getRunning();
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function start(OutputInterface $output, array $config = [])
     {
         try {
@@ -126,6 +129,9 @@ abstract class AbstractService implements ServiceInterface
         }
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function stop(OutputInterface $output)
     {
         try {
@@ -137,31 +143,49 @@ abstract class AbstractService implements ServiceInterface
         }
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function destroyContainer(OutputInterface $output)
     {
         $this->getContainerManager()->remove($this->getName());
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function removeImage(OutputInterface $output)
     {
         $this->getImageManager()->remove($this->getImageName());
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function import()
     {
         throw new RuntimeException('import is not implemented');
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function export()
     {
         throw new RuntimeException('export is not implemented');
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getName()
     {
         return $this->name;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getIp()
     {
         $container = $this->getContainer();
@@ -199,6 +223,14 @@ abstract class AbstractService implements ServiceInterface
         return $vars;
     }
 
+    /**
+     * Execute a command on the docker container
+     *
+     * @param OutputInterface @output
+     * @param string $cmd
+     *
+     * @return boolean
+     */
     protected function exec(OutputInterface $output, $cmd)
     {
         $cmd = explode(' ', $cmd);
@@ -217,7 +249,15 @@ abstract class AbstractService implements ServiceInterface
         return true;
     }
 
-    protected function buildImage(OutputInterface $output, $config = [])
+    /**
+     * Build the docker image
+     *
+     * @param OutputInterface $output
+     * @param array $config
+     *
+     * @return boolean
+     */
+    protected function buildImage(OutputInterface $output, array $config = [])
     {
         $manager = $this->getImageManager();
 
@@ -229,60 +269,48 @@ abstract class AbstractService implements ServiceInterface
 
         $params = ['t' => $this->getImageName()];
 
-        $message = 'Creating base image';
         try {
-            $response = $manager->build(
+            $buildStream = $manager->build(
                 $context->toStream(),
                 $params,
-                ImageManager::FETCH_RESPONSE
+                ImageManager::FETCH_OBJECT
             );
-            $stream = $response->getBody();
 
-            $spinner = new Spinner($output, $message);
-            while (!$stream->eof()) {
-                $output->writeln(
-                    $stream->read(128),
-                    OutputInterface::VERBOSITY_VERBOSE
-                );
-                $spinner->tick();
-            }
-
-            $output->clearLine();
-            $output->writeStatus($message, 'OK', 'success');
-            $output->emptyLine();
+            return true;
         } catch (ClientErrorException $e) {
-            $output->clearLine();
-            $output->writeStatus($message, 'FAIL', 'error');
-            $output->writeln('');
-            throw $e;
+
+            return false;
         }
     }
 
-    protected function buildContainer(OutputInterface $output, $config = [])
+    /**
+     * Build the docker container
+     *
+     * @param OutputInterface $output
+     * @param array $config
+     *
+     * @return boolean
+     */
+    protected function buildContainer(OutputInterface $output, array $config = [])
     {
         $manager = $this->getContainerManager();
+
         $config = $this->getContainerConfig($config);
 
         $params = ['name' => $this->getName()];
-        $response = $manager->create(
-            $config,
-            $params,
-            ContainerManager::FETCH_STREAM
-        );
-        $stream = $response->getBody();
 
-        $message = 'Building your container';
-        $spinner = new Spinner($output, $message);
-        while (!$stream->eof()) {
-            $output->writeln(
-                $stream->read(128),
-                OutputInterface::VERBOSITY_VERBOSE
+        try {
+            $manager->create(
+                $config,
+                $params,
+                ContainerManager::FETCH_OBJECT
             );
-            $spinner->tick();
+
+            return true;
+        } catch (ClientErrorException $e) {
+
+            return false;
         }
-        $output->clearLine();
-        $output->writeStatus($message, 'OK', 'success');
-        $output->emptyLine();
     }
 
     /**
@@ -302,7 +330,15 @@ abstract class AbstractService implements ServiceInterface
     }
 
     /**
-     * @return Docker\Manager\ImageManager
+     * @param Context $context
+     */
+    protected function copyFixtures(Context $context)
+    {
+        // noop
+    }
+
+    /**
+     * @return ImageManager
      */
     protected function getImageManager()
     {
@@ -310,11 +346,27 @@ abstract class AbstractService implements ServiceInterface
     }
 
     /**
-     * @return Docker\Manager\ContainerManager
+     * @return ContainerManager
      */
     protected function getContainerManager()
     {
         return $this->docker->getContainerManager();
+    }
+
+    /**
+     * Fetches the image if it exists
+     *
+     * @return Image|false
+     */
+    protected function getImage()
+    {
+        try {
+            $image = $this->getImageManager()->find($this->getImageName());
+
+            return $image instanceof Image;
+        } catch (ClientErrorException $e) {
+            return false;
+        }
     }
 
     /**

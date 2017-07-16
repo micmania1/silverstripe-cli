@@ -15,6 +15,9 @@ use micmania1\SilverStripeCli\Console\OutputInterface;
 
 class MariaDbService extends AbstractService
 {
+    /**
+     * {@inheritdoc}
+     */
     public function getImageName()
     {
         return 'sscli-db:1';
@@ -23,7 +26,7 @@ class MariaDbService extends AbstractService
     /**
      * {@inheritdoc}
      */
-    protected function getImageBuilder($config = [])
+    protected function getImageBuilder(array $config = [])
     {
         $builder = new ContextBuilder();
         $builder->from('mariadb:10.1');
@@ -31,7 +34,10 @@ class MariaDbService extends AbstractService
         return $builder;
     }
 
-    protected function getContainerConfig($config = [])
+    /**
+     * {@inheritdoc}
+     */
+    protected function getContainerConfig(array $config = [])
     {
         if (!isset($config['rootPass'])) {
             throw new RuntimeException('rootPass config missing');
@@ -63,10 +69,5 @@ class MariaDbService extends AbstractService
         $containerConfig->setHostConfig($hostConfig);
 
         return $containerConfig;
-    }
-
-    protected function copyFixtures(Context $context)
-    {
-        // noop
     }
 }

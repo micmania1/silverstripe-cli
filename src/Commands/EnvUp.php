@@ -32,7 +32,16 @@ class EnvUp extends BaseCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $this->environment->build($output);
-        $this->environment->start($output);
+        if (!$this->environment->build($output)) {
+            throw new RuntimeException('Unable to build environment');
+        }
+
+        if ($this->environment->start($output)) {
+            $output->writeln(sprintf(
+                " You can view the website at <info>%s</info>",
+                $this->environment->getUrl()
+            ));
+            $output->emptyLine();
+        }
     }
 }

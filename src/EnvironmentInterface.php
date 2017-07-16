@@ -69,4 +69,11 @@ interface EnvironmentInterface
      * @return boolean
      */
     public function import(OutputInterface $output, $outputFile);
+
+    /**
+     * Returns the URL of the environment
+     *
+     * @return string
+     */
+    public function getUrl();
 }

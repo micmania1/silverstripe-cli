@@ -5,7 +5,6 @@ namespace micmania1\SilverStripeCli\Docker;
 use Closure;
 use PDO;
 use PDOException;
-use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Console\Exception\RuntimeException;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Helper\TableCell;
@@ -61,8 +60,19 @@ class Environment implements EnvironmentInterface
      */
     public function build(OutputInterface $output)
     {
-        return $this->buildDatabaseService($output)
-            && $this->buildWebService($output);
+        if (!$this->dbService->containerExists()
+            && !$this->buildDatabaseService($output)
+        ) {
+            return false;
+        }
+
+        if (!$this->webService->containerExists()
+            && !$this->buildWebService($output)
+        ) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -92,7 +102,7 @@ class Environment implements EnvironmentInterface
     public function start(OutputInterface $output)
     {
         $output->writeStatus(sprintf(
-            'Starting environment %s',
+            'Starting environment <info>%s</info>',
             $this->project->getName()
         ));
 
@@ -214,6 +224,16 @@ class Environment implements EnvironmentInterface
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function getUrl()
+    {
+        $webVars = $this->webService->getEnvVars();
+
+        return 'http://localhost:' . $webVars['SSCLI_HOST_PORT'];
+    }
+
+    /**
      * Responsible for creating config for the database service and building it
      *
      * @param OutputInterface $output
@@ -222,17 +242,25 @@ class Environment implements EnvironmentInterface
      */
     protected function buildDatabaseService(OutputInterface $output)
     {
-        $password = $this->generator->generateString(32);
-
         $config = [
-            'rootPass' => $password,
+            'rootPass' => $this->generator->generateString(32),
             'hostPort' => (string) $this->generator->generateInt(9000, 9999),
         ];
 
-        // @todo check returns value so we can say whether the service has been built
-        $this->dbService->build($output, $config);
+        $message = 'Building <info>database</info> service';
+        $output->writeStatus($message);
 
-        return true;
+        $built = $this->dbService->build($output, $config);
+
+        $output->clearLine();
+        if ($built) {
+            $output->writeStatus($message, 'OK', 'success');
+        } else {
+            $output->writeStatus($message, 'FAIL', 'error');
+        }
+        $output->emptyLine();
+
+        return $built;
     }
 
     /**
@@ -255,10 +283,20 @@ class Environment implements EnvironmentInterface
             'hostDir' => $this->project->getRootDirectory(),
         ];
 
-        // @todo check returns value so we can say whether the service has been built
-        $this->webService->build($output, $config);
+        $message = 'Building <info>web</info> service';
+        $output->writeStatus($message);
 
-        return true;
+        $built = $this->webService->build($output, $config);
+
+        $output->clearLine();
+        if ($built) {
+            $output->writeStatus($message, 'OK', 'success');
+        } else {
+            $output->writeStatus($message, 'FAIL', 'error');
+        }
+        $output->emptyLine();
+
+        return $built;
     }
 
     /**
