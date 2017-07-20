@@ -20,5 +20,9 @@
         "symfony/yaml": "^3.3",
         "vlucas/phpdotenv": "^2.4",
         "php-di/php-di": "^5.4"
+    },
+    "require-dev": {
+        "phpspec/phpspec": "^3.4",
+        "mikey179/vfsStream": "^1.6"
     }
 }

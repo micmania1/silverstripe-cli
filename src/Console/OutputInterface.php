@@ -2,7 +2,9 @@
 
 namespace micmania1\SilverStripeCli\Console;
 
-interface OutputInterface
+use Symfony\Component\Console\Output\OutputInterface as BaseOutputInterface;
+
+interface OutputInterface extends BaseOutputInterface
 {
     /**
      * Clears the previously written line
@@ -26,4 +28,11 @@ interface OutputInterface
      *  @param string $type eg. <info>status</info>
      */
     public function writeStatus($message, $status = null, $type = null);
+
+    /**
+     * Displays the environment details (web and db)
+     *
+     * @param array $vars
+     */
+    public function displayEnvironmentDetails(array $vars);
 }

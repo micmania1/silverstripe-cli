@@ -80,4 +80,53 @@ class Output extends ConsoleOutput implements OutputInterface
 
         return $length;
     }
+
+    /**
+     * Displays details for the web service including url and default cms admin
+     *
+     * @param OutputInterface $output
+     */
+    public function displayEnvironmentDetails(array $vars)
+    {
+        if (isset($vars['SS_DEFAULT_ADMIN_USERNAME'])
+            && isset($vars['SS_DEFAULT_ADMIN_PASSWORD'])
+        ) {
+            $adminUsername = $vars['SS_DEFAULT_ADMIN_USERNAME'];
+            $adminPassword = $vars['SS_DEFAULT_ADMIN_PASSWORD'];
+        } else {
+            $adminUsername = '<warning>No default admin</warning>';
+            $adminPassword = '<warning>No default admin</warning>';
+        }
+
+        $table = new Table($output);
+        $table->setHeaders([new TableCell('Website Access', ['colspan' => 2])]);
+        $table->setStyle('compact');
+        $table->setRows([
+            ['URL', sprintf('http://localhost:%d', $env['WEB_PORT'])],
+            ['Admin URL', sprintf('http://localhost:%d/admin', $env['WEB_PORT'])],
+            ['CMS Admin', $adminUsername],
+            ['CMS Password', $adminPassword],
+        ]);
+        $table->setColumnWidth(0, ceil(BaseCommand::COLUMN_LENGTH / 2));
+        $table->setColumnWidth(1, ceil(BaseCommand::COLUMN_LENGTH / 2));
+        $table->render();
+
+        $output->emptyLine();
+
+        $table = new Table($output);
+        $table->setHeaders([new TableCell('Database Access', ['colspan' => 2])]);
+        $table->setStyle('compact');
+        $table->setRows([
+            ['Database name', $vars['SS_DATABASE_NAME']],
+            ['Username', $vars['SS_DATABASE_USERNAME']],
+            ['Password', $vars['SS_DATABASE_PASSWORD']],
+            ['Host', $vars['DB_HOSTNAME']],
+            ['Port', $vars['DB_PORT']],
+        ]);
+        $table->setColumnWidth(0, ceil(BaseCommand::COLUMN_LENGTH / 2));
+        $table->setColumnWidth(1, ceil(BaseCommand::COLUMN_LENGTH / 2));
+        $table->render();
+
+        $output->emptyLine();
+    }
 }
