@@ -100,7 +100,7 @@ class WebService extends AbstractService
         $containerConfig->setVolumes(['/var/www/mysite' => (object) []]);
         $containerConfig->setTty(true);
         $containerConfig->setCmd('/opt/docker-startup');
-        $containerConfig->setExposedPorts(['80/tcp' => (object)[]]);
+        $containerConfig->setExposedPorts(['80/tcp' => (object) []]);
 
         $uid = posix_getuid();
         $userInfo = posix_getpwuid($uid);

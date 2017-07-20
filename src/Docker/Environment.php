@@ -125,7 +125,7 @@ class Environment implements EnvironmentInterface
         $dbRunning = $this->dbService->isRunning($output);
         $webRunning = $this->webService->isRunning($output);
 
-        if($dbRunning && $webRunning) {
+        if ($dbRunning && $webRunning) {
             $output->clearLine();
             $output->writeStatus(
                 sprintf('Starting environment %s', $this->project->getName()),

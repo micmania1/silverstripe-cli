@@ -53,13 +53,13 @@ return [
     'app.version' => '0.1-experimental',
     'app.dbName' => 'database-shared',
     'app.root' => getcwd(),
-    'app.fixtures' => function (ContainerInterface $container) {
+    'app.fixtures' => function(ContainerInterface $container) {
         return $container->get('app.root') . DIRECTORY_SEPARATOR . 'fixtures';
     },
-    'app.assets' => function (ContainerInterface $container) {
+    'app.assets' => function(ContainerInterface $container) {
         return $container->get('app.root') . DIRECTORY_SEPARATOR . 'cli-assets';
     },
-    'composer.bin' => function (ContainerInterface $container) {
+    'composer.bin' => function(ContainerInterface $container) {
         return implode(DIRECTORY_SEPARATOR, [
             $container->get('app.root'),
             'vendor',
@@ -68,12 +68,12 @@ return [
         ]);
     },
 
-    Generator::class => function () {
+    Generator::class => function() {
         return (new GeneratorFactory())
             ->getMediumStrengthGenerator();
     },
 
-    Application::class => function (ContainerInterface $container) {
+    Application::class => function(ContainerInterface $container) {
         $application = new Application(get(Generator::class));
 
         $application->setName($container->get('app.name'));
@@ -98,7 +98,7 @@ return [
         return $application;
     },
 
-    OutputInterface::class => function (ContainerInterface $container) {
+    OutputInterface::class => function(ContainerInterface $container) {
         $output = $container->get(Output::class);
 
         $successStyle = new OutputFormatterStyle('white', 'green');
@@ -110,7 +110,7 @@ return [
         return $output;
     },
 
-    InputInterface::class => function (ContainerInterface $container) {
+    InputInterface::class => function(ContainerInterface $container) {
         return $container->get(ArgvInput::class);
     },
 
@@ -123,7 +123,7 @@ return [
     MariaDbService::class => object()
         ->constructor(get('app.dbName'), get(Docker::class)),
 
-    WebService::class => function (ContainerInterface $container) {
+    WebService::class => function(ContainerInterface $container) {
         $project = $container->get(Project::class);
         $name = $project->getName() . '-web';
 

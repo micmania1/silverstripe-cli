@@ -125,7 +125,7 @@ class MariaDbService extends AbstractService
             sprintf('SSCLI_HOST_PORT=%d', $config['hostPort']),
             sprintf('MYSQL_ROOT_PASSWORD=%s', $config['rootPass']),
         ]);
-        $containerConfig->setExposedPorts(['3306/tcp' => (object)[]]);
+        $containerConfig->setExposedPorts(['3306/tcp' => (object) []]);
 
         // Map ports
         $portBinding = new PortBinding();
