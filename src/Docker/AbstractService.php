@@ -35,14 +35,14 @@ abstract class AbstractService implements ServiceInterface
     /**
      * @param array $config
      *
-     * @return Docker\Context\ContextBuilder|null
+     * @return \Docker\Context\ContextBuilder|null
      */
     abstract protected function getImageBuilder(array $config = []);
 
     /**
      * @param array $config
      *
-     * @return Docker\Manager\ContainerConfig
+     * @return \Docker\Manager\ContainerConfig
      */
     abstract protected function getContainerConfig(array $config = []);
 
