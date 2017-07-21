@@ -267,7 +267,7 @@ abstract class AbstractService implements ServiceInterface
         $params = ['t' => $this->getImageName()];
 
         try {
-            $buildStream = $manager->build(
+            $manager->build(
                 $context->toStream(),
                 $params,
                 ImageManager::FETCH_OBJECT
