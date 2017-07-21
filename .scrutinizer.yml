@@ -1,0 +1,21 @@
+filter:
+  excluded_paths:
+    - 'bin/*'
+    - 'spec/*'
+checks:
+    php: true
+
+coding_style:
+  php:
+    spaces:
+      around_operators:
+        concatenation: true
+
+build:
+  tests:
+    override:
+      -
+        command: './vendor/bin/phpspec run'
+
+tools:
+  php_cs_fixer: true
