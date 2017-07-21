@@ -84,7 +84,6 @@ class Output extends ConsoleOutput implements OutputInterface
     /**
      * Displays details for the web service including url and default cms admin
      *
-     * @param OutputInterface $output
      */
     public function displayEnvironmentDetails(array $vars)
     {

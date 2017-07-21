@@ -2,8 +2,6 @@
 
 namespace micmania1\SilverStripeCli;
 
-use Closure;
-use Symfony\Component\Console\Input\InputInterface;
 use micmania1\SilverStripeCli\Console\OutputInterface;
 
 /**
@@ -64,7 +62,7 @@ interface EnvironmentInterface
      * This will import an sspak into the current environment
      *
      * @param OutputInterface $output
-     * @param string $inputFile
+     * @param string $outputFile
      *
      * @return boolean
      */
