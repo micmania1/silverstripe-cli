@@ -108,7 +108,7 @@ class WebService extends AbstractService
 
         $gid = posix_getgid();
         $groupInfo = posix_getgrgid($gid);
-        $groupName = $groupInfo = $groupInfo['name'];
+        $groupName = $groupInfo['name'];
 
         $containerConfig->setEnv([
             sprintf('SSCLI_ID=%s', $config['cliId']),
