@@ -27,6 +27,11 @@ class Project
     protected $cliFile;
 
     /**
+     * @var string
+     */
+    protected $dir;
+
+    /**
      * @param string $dir Project root directory
      */
     public function __construct($dir)
@@ -98,7 +103,7 @@ class Project
     /**
      * Returns the filepath for the cli config file.
      *
-     * @return string
+     * @return ProjectCliFile
      */
     public function getCliFile()
     {
