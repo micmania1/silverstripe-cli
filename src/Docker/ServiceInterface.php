@@ -44,7 +44,7 @@ interface ServiceInterface
      * @param OutputInterface $output
      * @param array $config
      *
-     * @return array
+     * @return boolean
      */
     public function build(OutputInterface $output, array $config = []);
 
