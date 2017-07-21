@@ -2,8 +2,6 @@
 
 namespace micmania1\SilverStripeCli\Helpers;
 
-use micmania1\SilverStripeCli\Commands\BaseCommand;
-
 class Spinner
 {
     /**
@@ -30,7 +28,7 @@ class Spinner
      * @param string $status
      * @param string $statusType
      *
-     * @return boolean
+     * @return boolean|null
      */
     public function run($status, $statusType)
     {

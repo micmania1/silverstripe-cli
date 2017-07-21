@@ -10,7 +10,6 @@ use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Filesystem\Filesystem;
 use Psr\Container\ContainerInterface;
-
 use micmania1\SilverStripeCli\Application;
 use micmania1\SilverStripeCli\Model\Project;
 use micmania1\SilverStripeCli\Console\Output;
@@ -27,7 +26,6 @@ use micmania1\SilverStripeCli\Commands\ProjectCreate;
 
 // Docker
 use Docker\Docker;
-use micmania1\SilverStripeCli\Docker\Environment;
 use micmania1\SilverStripeCli\Docker\MariaDbService;
 use micmania1\SilverStripeCli\Docker\WebService;
 

@@ -3,7 +3,6 @@
 namespace micmania1\SilverStripeCli\Model;
 
 use Symfony\Component\Filesystem\Filesystem;
-
 use micmania1\SilverStripeCli\Helpers\DotEnvMemoryLoader;
 
 class Project
@@ -79,8 +78,9 @@ class Project
      * Removes a file or folder within the project
      *
      * @param string
+     * @param string $file
      *
-     * @return boolean
+     * @return boolean|null
      *
      * @throws Symfony\Component\Filesystem\Exception\IOExceptionInterface
      */

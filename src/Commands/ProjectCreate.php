@@ -13,7 +13,6 @@ use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
-use Symfony\Component\Console\Exception\RuntimeException;
 use Cz\Git;
 
 class ProjectCreate extends BaseCommand
