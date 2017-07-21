@@ -49,7 +49,7 @@ class Output extends ConsoleOutput implements OutputInterface
             $length = strlen($status);
             $message = substr($message, 0, $length * -1);
 
-            if ($type) {
+            if (!empty($type)) {
                 $message = sprintf(
                     '%s<%3$s>%s</%3$s>',
                     $message,
@@ -97,12 +97,12 @@ class Output extends ConsoleOutput implements OutputInterface
             $adminPassword = '<warning>No default admin</warning>';
         }
 
-        $table = new Table($output);
+        $table = new Table($this);
         $table->setHeaders([new TableCell('Website Access', ['colspan' => 2])]);
         $table->setStyle('compact');
         $table->setRows([
-            ['URL', sprintf('http://localhost:%d', $env['WEB_PORT'])],
-            ['Admin URL', sprintf('http://localhost:%d/admin', $env['WEB_PORT'])],
+            ['URL', sprintf('http://localhost:%d', $vars['WEB_PORT'])],
+            ['Admin URL', sprintf('http://localhost:%d/admin', $vars['WEB_PORT'])],
             ['CMS Admin', $adminUsername],
             ['CMS Password', $adminPassword],
         ]);
@@ -112,7 +112,7 @@ class Output extends ConsoleOutput implements OutputInterface
 
         $output->emptyLine();
 
-        $table = new Table($output);
+        $table = new Table($this);
         $table->setHeaders([new TableCell('Database Access', ['colspan' => 2])]);
         $table->setStyle('compact');
         $table->setRows([
