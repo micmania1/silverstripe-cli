@@ -22,7 +22,7 @@ class Project
     const WEB_DIRECTORY = 'www';
 
     /**
-     * @var ProjectConfigFile
+     * @var ProjectCliFile
      */
     protected $cliFile;
 

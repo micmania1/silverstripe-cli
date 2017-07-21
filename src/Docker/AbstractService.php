@@ -42,7 +42,7 @@ abstract class AbstractService implements ServiceInterface
     /**
      * @param array $config
      *
-     * @return \Docker\Manager\ContainerConfig
+     * @return \Docker\API\Model\ContainerConfig
      */
     abstract protected function getContainerConfig(array $config = []);
 
