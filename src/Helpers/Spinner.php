@@ -17,6 +17,8 @@ class Spinner
 
     protected $state = 0;
 
+    protected $time = 1;
+
     public function __construct($output, $message, $time = 1)
     {
         $this->output = $output;
