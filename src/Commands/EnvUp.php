@@ -7,17 +7,17 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Exception\RuntimeException;
 use micmania1\SilverStripeCli\Console\OutputInterface;
 use micmania1\SilverStripeCli\Model\Project;
-use micmania1\SilverStripeCli\Docker\Environment;
+use micmania1\SilverStripeCli\EnvironmentInterface;
 use micmania1\SilverStripeCli\Helpers\Spinner;
 
 class EnvUp extends BaseCommand
 {
     /**
-     * @var Environment
+     * @var EnvironmentInterface
      */
     protected $environment;
 
-    public function __construct(Environment $environment)
+    public function __construct(EnvironmentInterface $environment)
     {
         parent::__construct();
 

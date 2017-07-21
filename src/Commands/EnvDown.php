@@ -8,16 +8,16 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use micmania1\SilverStripeCli\Console\OutputInterface;
 use micmania1\SilverStripeCli\Model\Project;
-use micmania1\SilverStripeCli\Docker\Environment;
+use micmania1\SilverStripeCli\EnvironmentInterface;
 
 class EnvDown extends BaseCommand
 {
     /**
-     * @var Environment
+     * @var EnvironmentInterface
      */
     protected $environment;
 
-    public function __construct(Environment $environemnt)
+    public function __construct(EnvironmentInterface $environemnt)
     {
         parent::__construct();
 

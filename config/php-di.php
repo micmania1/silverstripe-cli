@@ -12,6 +12,7 @@ use Symfony\Component\Filesystem\Filesystem;
 use Psr\Container\ContainerInterface;
 use micmania1\SilverStripeCli\Application;
 use micmania1\SilverStripeCli\Model\Project;
+use micmania1\SilverStripeCli\EnvironmentInterface;
 use micmania1\SilverStripeCli\Console\Output;
 use micmania1\SilverStripeCli\Console\OutputInterface;
 use micmania1\SilverStripeCli\Commands\EnvUp;
@@ -26,6 +27,7 @@ use micmania1\SilverStripeCli\Commands\ProjectCreate;
 
 // Docker
 use Docker\Docker;
+use micmania1\SilverStripeCli\Docker\Environment;
 use micmania1\SilverStripeCli\Docker\MariaDbService;
 use micmania1\SilverStripeCli\Docker\WebService;
 
@@ -110,6 +112,10 @@ return [
 
     InputInterface::class => function(ContainerInterface $container) {
         return $container->get(ArgvInput::class);
+    },
+
+    EnvironmentInterface::class => function(ContainerInterface $container) {
+        return $container->get(Environment::class);
     },
 
     ProjectCreate::class => object()
