@@ -4,7 +4,7 @@ use function DI\object;
 use function DI\get;
 
 use RandomLib\Factory as GeneratorFactory;
-use RandomLib\Generator;
+use RandomLib\Generator as RandomGenerator;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
@@ -68,13 +68,13 @@ return [
         ]);
     },
 
-    Generator::class => function() {
+    RandomGenerator::class => function() {
         return (new GeneratorFactory())
             ->getMediumStrengthGenerator();
     },
 
     Application::class => function(ContainerInterface $container) {
-        $application = new Application(get(Generator::class));
+        $application = new Application(get(RandomGenerator::class));
 
         $application->setName($container->get('app.name'));
         $application->setVersion($container->get('app.version'));
