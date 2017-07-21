@@ -110,7 +110,7 @@ class Output extends ConsoleOutput implements OutputInterface
         $table->setColumnWidth(1, ceil(BaseCommand::COLUMN_LENGTH / 2));
         $table->render();
 
-        $output->emptyLine();
+        $this->emptyLine();
 
         $table = new Table($this);
         $table->setHeaders([new TableCell('Database Access', ['colspan' => 2])]);
@@ -126,6 +126,6 @@ class Output extends ConsoleOutput implements OutputInterface
         $table->setColumnWidth(1, ceil(BaseCommand::COLUMN_LENGTH / 2));
         $table->render();
 
-        $output->emptyLine();
+        $this->emptyLine();
     }
 }
