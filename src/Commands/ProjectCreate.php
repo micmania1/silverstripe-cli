@@ -40,7 +40,7 @@ class ProjectCreate extends BaseCommand
     /**
      * @var Filesystem
      */
-    protected $filesyste;
+    protected $filesystem;
 
     /**
      * The current working directory for this command to work from
